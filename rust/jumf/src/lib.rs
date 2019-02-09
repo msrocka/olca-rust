@@ -5,7 +5,7 @@ use std::ffi::c_void;
 use std::ptr;
 use std::slice;
 
-#[link(name = "umfpack")]
+#[link(name = "libumfpack")]
 extern "C" {
     fn umfpack_di_symbolic(
         n_row: i32,
