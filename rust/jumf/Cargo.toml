@@ -3,6 +3,7 @@ name = "jumf"
 version = "0.1.0"
 authors = ["msrocka"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 jni-sys = "0.3.0"
