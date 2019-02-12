@@ -1,4 +1,9 @@
 /target
-/bin
+
+/bin/*.dll
+/bin/*.exp
+/bin/*.lib
+/bin/*.exports
+
 **/*.rs.bk
 Cargo.lock

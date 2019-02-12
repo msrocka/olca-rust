@@ -36,3 +36,21 @@ analyze the library dependencies. You should get the following dependecy tree:
     -> libcolamd.dll
        -> libsuitesparseconfig.dll
 ```
+
+We put these libraries into the `jumf/rust/jumf/bin` folder. In order to build
+the Windows library we also need to
+[generate a lib-file](https://stackoverflow.com/a/16127548/599575) from the
+`libumfpack.dll` library:
+
+1. Add the `dumpbin` and `lib` tools from MSVC 2017 build tools (which are anyhow
+   required for the Rust compiler) to your path (something like
+   `C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64`)
+2. run `dumpbin /EXPORTS libumfpack.dll > libumfpack.exports` in the bin folder
+3. Paste the names of the functions from `libumfpack.exports` into a new
+   `libumfpack.def` file. Add a line with the word `EXPORTS` at the top of this
+   file. (the `libumfpack.def` file is versioned the next steps are part of the
+   `build.bat` script)
+4. Generate the `lib` file: lib /def:libumfpack.def /out:libumfpack.lib (this
+   will also generate an `libumfpack.exp` file)
+
+
