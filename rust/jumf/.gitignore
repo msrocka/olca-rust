@@ -4,6 +4,8 @@
 /bin/*.exp
 /bin/*.lib
 /bin/*.exports
+/bin/*.so
+/bin/*.so.*
 
 **/*.rs.bk
 Cargo.lock
