@@ -17,12 +17,8 @@ public class Main {
 				new double[] { 8., 45., -3., 3., 19. },
 				x);
 
-		// assertArrayEquals(
-		//		new double[] { 1d, 2d, 3d, 4d, 5d }, x, 1e-8);
-
 		for (int i = 0; i < x.length; i++) {
 			System.out.println("x["+ i +"] = " + x[i]);
 		}
-
 	}
 }
