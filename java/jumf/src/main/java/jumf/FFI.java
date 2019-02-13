@@ -15,7 +15,7 @@ public class FFI {
 			double[] demand,
 			double[] result);
 
-	public boolean isLoaded() {
+	public static boolean isLoaded() {
 		return loaded.get();
 	}
 
@@ -43,8 +43,8 @@ public class FFI {
 	}
 
 	private static String[] libs() {
-		String os = System.getProperty("os.name").toLowerCase();
-		if (os.contains("windows")) {
+		OS os = OS.get();
+		if (os == OS.WINDOWS) {
 			return new String[] {
 					"libwinpthread-1.dll",
 					"libgcc_s_seh-1.dll",
@@ -59,6 +59,23 @@ public class FFI {
 					"libcholmod.dll",
 					"libumfpack.dll",
 					"jumf.dll"
+			};
+		}
+		if (os == OS.LINUX) {
+			return new String[] {
+				"libgcc_s.so.1",
+				"libstdc++.so.6",
+				"libquadmath.so.0",
+				"libgfortran.so.4",
+				"libopenblas64_.so",
+				"libsuitesparseconfig.so",
+				"libcolamd.so",
+				"libamd.so",
+				"libcamd.so",
+				"libccolamd.so",
+				"libcholmod.so",
+				"libumfpack.so",
+				"libjumf.so"
 			};
 		}
 		return new String[] {};
