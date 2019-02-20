@@ -54,3 +54,24 @@ the Windows library we also need to
    will also generate an `libumfpack.exp` file)
 
 
+### Linux
+
+* the library name of UMFPACK is `libumfpack.so` but the linking name is `umfpack`:
+  `#[link(name = "umfpack"]`
+
+The folder with the shared libraries needs to be in the `LD_LIBRARY_PATH`. When this
+is the case the tests run, e.g.:
+
+```bash
+export LD_LIBRARY_PATH=/path/to/bin/folder
+
+## and then the Maven test works:
+mvn test
+```
+
+see also: https://stackoverflow.com/a/7284911
+
+Eclipse should add the folder with the executable launcher to the `LD_LIBRARY_PATH`:
+
+  
+  
