@@ -1,10 +1,11 @@
-# jumf
-`jumf` is an experimental library that provides Java bindings to
-[UMFPACK](https://en.wikipedia.org/wiki/UMFPACK) where the
-[JNI](https://en.wikipedia.org/wiki/Java_Native_Interface) glue code is written
+# olca-rust
+`olca-rust` is an experimental project the provides 
+[JNI bindings](https://en.wikipedia.org/wiki/Java_Native_Interface) for the
+high performance math libraries that are used in
+[openLCA](https://github.com/GreenDelta/olca-app) where the glue code is written
 in [Rust](https://www.rust-lang.org/). If this works well on Windows, macOS, and
 Linux we may merge this into the [openLCA core](https://github.com/GreenDelta/olca-modules)
-to call into our native high performance math libraries.
+to call into native code.
 
 ## Getting UMFPACK
 An easy way to get the compiled UMFPACK libraries together with an high
@@ -55,7 +56,7 @@ the Windows library we also need to
 
 
 ### Linux
-
+* for Rust, you need to have gcc installed (the cc linker)
 * the library name of UMFPACK is `libumfpack.so` but the linking name is `umfpack`:
   `#[link(name = "umfpack"]`
 
@@ -72,6 +73,8 @@ mvn test
 see also: https://stackoverflow.com/a/7284911
 
 Eclipse should add the folder with the executable launcher to the `LD_LIBRARY_PATH`:
+https://eclipsesource.com/blogs/2012/08/18/using-shared-libraries-with-eclipse-rcp/
+
 
   
   
