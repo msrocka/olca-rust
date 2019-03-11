@@ -103,7 +103,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let mut rowsA_64:i64 = rowsA as i64;
         let mut colsA_64:i64 = colsA as i64;
 
-        blas::dgemv64_(
+        blas::dgemv(
             &mut trans,
             &mut rowsA_64,
             &mut colsA_64,
