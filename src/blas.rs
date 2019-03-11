@@ -1,8 +1,12 @@
-#[link(name = "libopenblas64_")]
+// #[link(name = "libopenblas64_")]
+
 #[allow(non_snake_case)]
+#[cfg_attr(target_os = "windows", link(name = "libopenblas64_"))]
+#[cfg_attr(target_os = "linux", link(name = "openblas64_"))]
 extern "C" {
 
     #[cfg_attr(target_os = "windows", link_name="dgemv64_" )]
+    #[cfg_attr(target_os = "linux", link_name="dgemv_64_" )]
     pub fn dgemv(
         TRANS: *mut char,
         M: *mut i64,
