@@ -1,6 +1,7 @@
 /target/
-
 /bin/
+
+.idea/
 
 **/*.rs.bk
 Cargo.lock

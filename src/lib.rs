@@ -5,6 +5,7 @@ use std::ffi::c_void;
 use std::ptr;
 
 #[link(name = "umfpack")]  // it is just "umfpack" on Linux
+#[allow(non_snake_case)]
 extern "C" {
     fn umfpack_di_symbolic(
         n_row: i32,
