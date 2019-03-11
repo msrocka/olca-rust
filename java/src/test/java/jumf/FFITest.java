@@ -11,7 +11,7 @@ public class FFITest {
 
 	@Test
 	public void test() {
-		File libDir = new File("./bin");
+		File libDir = new File("../bin");
 		// FFI.load(libDir);
 
 		File lib = new File(libDir, "olcar.dll");

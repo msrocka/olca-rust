@@ -7,10 +7,20 @@ in [Rust](https://www.rust-lang.org/). If this works well on Windows, macOS, and
 Linux we may merge this into the [openLCA core](https://github.com/GreenDelta/olca-modules)
 to call into native code.
 
-We currently provide library links to [OpenBLAS](https://github.com/xianyi/OpenBLAS)
-and [UMFPACK](https://github.com/PetterS/SuiteSparse). We take pre-compiled
+We currently link dynamically to [OpenBLAS](https://github.com/xianyi/OpenBLAS)
+and [UMFPACK](https://github.com/PetterS/SuiteSparse) and we take pre-compiled
 versions of these libraries for the respective platforms directly from the
-[Julia](https://julialang.org/) binaries and link them dynamically.
+[Julia](https://julialang.org/) distribution packages.
+
+
+## Running the tests
+
+0. (Install the compiler tool chain)
+1. Copy the Julia libraries into the `bin` folder (see below which libraries
+   are required for which platform)
+2. Run the library build using the platform specific build script (`build*`
+   in the project root)
+3. Run the Java tests from the project root
 
 
 ### Windows
@@ -39,10 +49,10 @@ analyze the library dependencies. You should get the following dependency tree:
        -> libsuitesparseconfig.dll
 ```
 
-We put these libraries into the `jumf/rust/jumf/bin` folder. In order to build
+We put these libraries into the `bin` folder. In order to build
 the Windows library we also need to
-[generate a lib-file](https://stackoverflow.com/a/16127548/599575) from the
-`libumfpack.dll` library:
+[generate a lib-file](https://stackoverflow.com/a/16127548/599575) for each
+library we want to link again, e.g. for UMFPACK:
 
 1. Add the `dumpbin` and `lib` tools from MSVC 2017 build tools (which are anyhow
    required for the Rust compiler) to your path (something like

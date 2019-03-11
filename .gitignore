@@ -1,11 +1,6 @@
-/target
+/target/
 
-/bin/*.dll
-/bin/*.exp
-/bin/*.lib
-/bin/*.exports
-/bin/*.so
-/bin/*.so.*
+/bin/
 
 **/*.rs.bk
 Cargo.lock

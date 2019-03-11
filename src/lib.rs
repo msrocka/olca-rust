@@ -4,7 +4,7 @@ use jni_sys::*;
 use std::ffi::c_void;
 use std::ptr;
 
-#[link(name = "libumfpack")]  // it is just "umfpack" on Linux
+#[link(name = "umfpack")]  // it is just "umfpack" on Linux
 extern "C" {
     fn umfpack_di_symbolic(
         n_row: i32,
