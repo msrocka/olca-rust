@@ -3,7 +3,6 @@ extern crate jni_sys;
 use jni_sys::*;
 use std::ffi::c_void;
 use std::ptr;
-use std::slice;
 
 #[link(name = "libumfpack")]  // it is just "umfpack" on Linux
 extern "C" {
@@ -47,7 +46,7 @@ extern "C" {
 
 #[no_mangle]
 #[allow(non_snake_case)]
-pub extern "system" fn Java_jumf_FFI_solve(
+pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     env: *mut JNIEnv,
     _class: jclass,
     n: jint,
@@ -113,26 +112,4 @@ pub extern "system" fn Java_jumf_FFI_solve(
         jvm.ReleaseDoubleArrayElements.unwrap()(env, demand, demandPtr, 0);
         jvm.ReleaseDoubleArrayElements.unwrap()(env, result, resultPtr, 0);
     }
-}
-
-#[no_mangle]
-#[allow(non_snake_case)]
-pub extern "system" fn Java_jumf_FFI_sum(
-    env: *mut JNIEnv,
-    _class: jclass,
-    array: jdoubleArray,
-) -> jdouble {
-    let mut sum = 0.0;
-    unsafe {
-        let null: *mut u8 = ptr::null_mut();
-        let n = (**env).GetArrayLength.unwrap()(env, array);
-        println!("{} elements", n);
-        let arrayPtr = (**env).GetDoubleArrayElements.unwrap()(env, array, null);
-        let values = slice::from_raw_parts(arrayPtr, n as usize);
-        for val in values {
-            sum += val;
-        }
-        (**env).ReleaseDoubleArrayElements.unwrap()(env, array, arrayPtr, 0);
-    }
-    return sum;
 }

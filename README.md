@@ -7,14 +7,15 @@ in [Rust](https://www.rust-lang.org/). If this works well on Windows, macOS, and
 Linux we may merge this into the [openLCA core](https://github.com/GreenDelta/olca-modules)
 to call into native code.
 
-## Getting UMFPACK
-An easy way to get the compiled UMFPACK libraries together with an high
-performance BLAS implementation is to take them from the
-[Julia](https://julialang.org/) binaries.
+We currently provide library links to [OpenBLAS](https://github.com/xianyi/OpenBLAS)
+and [UMFPACK](https://github.com/PetterS/SuiteSparse). We take pre-compiled
+versions of these libraries for the respective platforms directly from the
+[Julia](https://julialang.org/) binaries and link them dynamically.
+
 
 ### Windows
 On Windows you can use [Dependency Walker](http://www.dependencywalker.com/) to
-analyze the library dependencies. You should get the following dependecy tree:
+analyze the library dependencies. You should get the following dependency tree:
 
 ```
 -> libumfpack.dll
