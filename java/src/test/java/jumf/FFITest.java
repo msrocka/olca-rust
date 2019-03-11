@@ -29,5 +29,13 @@ public class FFITest {
 		 assertArrayEquals(
 				new double[] { 1d, 2d, 3d, 4d, 5d }, x, 1e-8);
 
+
+		System.out.println("mvmul java");
+		double[] a = { 1, 4, 2, 5, 3, 6 };
+		double[] x2 = { 2, 1, 0.5 };
+		double[] y = new double[2];
+		Julia.mvmult(2, 3, a, x2, y);
+		assertArrayEquals(new double[] { 5.5, 16 }, y, 1e-16);
+
 	}
 }
