@@ -4,46 +4,7 @@ use jni_sys::*;
 use std::ffi::c_void;
 use std::ptr;
 
-#[link(name = "libumfpack")]  // it is just "umfpack" on Linux
-#[allow(non_snake_case)]
-extern "C" {
-    fn umfpack_di_symbolic(
-        n_row: i32,
-        n_col: i32,
-        Ap: *mut i32,
-        Ai: *mut i32,
-        Ax: *mut f64,
-        Symbolic: *mut *mut c_void,
-        Control: *mut f64,
-        Info: *mut f64,
-    ) -> i32;
-
-    fn umfpack_di_numeric(
-        Ap: *mut i32,
-        Ai: *mut i32,
-        Ax: *mut f64,
-        Symbolic: *mut c_void,
-        Numeric: *mut *mut c_void,
-        Control: *mut f64,
-        Info: *mut f64,
-    ) -> i32;
-
-    fn umfpack_di_solve(
-        sys: i32,
-        Ap: *mut i32,
-        Ai: *mut i32,
-        Ax: *mut f64,
-        X: *mut f64,
-        B: *mut f64,
-        Numeric: *mut c_void,
-        Control: *mut f64,
-        Info: *mut f64,
-    ) -> i32;
-
-    fn umfpack_di_free_symbolic(Symbolic: *mut *mut c_void);
-
-    fn umfpack_di_free_numeric(Numeric: *mut *mut c_void);
-}
+mod umf;
 
 #[no_mangle]
 #[allow(non_snake_case)]
@@ -71,7 +32,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
         let mut Symbolic: *mut c_void = ptr::null_mut();
         let mut Numeric: *mut c_void = ptr::null_mut();
 
-        umfpack_di_symbolic(
+        umf::umfpack_di_symbolic(
             n,
             n,
             columnPointersPtr,
@@ -82,7 +43,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
             nullF64,
         );
 
-        umfpack_di_numeric(
+        umf::umfpack_di_numeric(
             columnPointersPtr,
             rowIndicesPtr,
             valuesPtr,
@@ -92,9 +53,9 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
             nullF64,
         );
 
-        umfpack_di_free_symbolic(&mut Symbolic);
+        umf::umfpack_di_free_symbolic(&mut Symbolic);
 
-        umfpack_di_solve(
+        umf::umfpack_di_solve(
             0,
             columnPointersPtr,
             rowIndicesPtr,
@@ -105,7 +66,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
             nullF64,
             nullF64,
         );
-        umfpack_di_free_numeric(&mut Numeric);
+        umf::umfpack_di_free_numeric(&mut Numeric);
 
         jvm.ReleaseIntArrayElements.unwrap()(env, columnPointers, columnPointersPtr, 0);
         jvm.ReleaseIntArrayElements.unwrap()(env, rowIndices, rowIndicesPtr, 0);
