@@ -1,10 +1,14 @@
 @echo off
+cargo clean
+del /s /q /f bin\*.lib
+del /s /q /f bin\*.exp
+del /s /q /f bin\*.def
 
-xcopy /y windefs\umfpack.def bin
-xcopy /y windefs\openblas.def bin
+xcopy /y windefs\libumfpack.def bin
+xcopy /y windefs\libopenblas.def bin
 cd bin
-lib /def:umfpack.def /out:umfpack.lib /machine:X64
-lib /def:openblas.def /out:openblas.lib /machine:X64
+lib /def:libumfpack.def /out:libumfpack.lib /machine:X64
+lib /def:libopenblas.def /out:libopenblas.lib /machine:X64
 cd ..
 
 cargo build --release
