@@ -1,3 +1,7 @@
+extern crate libc;
+
+use libc::c_char;
+
 // #[link(name = "libopenblas64_")]
 
 #[allow(non_snake_case)]
@@ -13,7 +17,7 @@ extern "C" {
     #[cfg_attr(target_os = "windows", link_name = "dgemv64_")]
     #[cfg_attr(target_os = "linux", link_name = "dgemv_64_")]
     pub fn dgemv(
-        TRANS: *mut char,
+        TRANS: *mut c_char,
         M: *mut i64,
         N: *mut i64,
         ALPHA: *mut f64,

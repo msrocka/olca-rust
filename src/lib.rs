@@ -1,7 +1,9 @@
 extern crate jni_sys;
+extern crate libc;
 
 use jni_sys::*;
 use std::ffi::c_void;
+use libc::c_char;
 use std::ptr;
 
 mod umf;
@@ -105,7 +107,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let xPtr = jvm.GetDoubleArrayElements.unwrap()(env, x, NULL);
         let yPtr = jvm.GetDoubleArrayElements.unwrap()(env, y, NULL);
 
-        let mut trans = 'N';
+        let mut trans = 'N' as c_char;
         let mut alpha:f64 = 1.0;
         let mut beta:f64 = 0.0;
         let mut inc:i64 = 1;
