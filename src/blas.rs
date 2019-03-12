@@ -7,6 +7,7 @@ use libc::c_char;
 #[allow(non_snake_case)]
 #[cfg_attr(target_os = "windows", link(name = "libopenblas64_"))]
 #[cfg_attr(target_os = "linux", link(name = "openblas64_"))]
+#[cfg_attr(target_os = "macos", link(name = "openblas64_"))]
 extern "C" {
 
     /// [DGEMV](http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html)
@@ -16,6 +17,7 @@ extern "C" {
     /// is an `m` by `n` matrix.
     #[cfg_attr(target_os = "windows", link_name = "dgemv64_")]
     #[cfg_attr(target_os = "linux", link_name = "dgemv_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgemv_64_")]
     pub fn dgemv(
         TRANS: *mut c_char,
         M: *mut i64,

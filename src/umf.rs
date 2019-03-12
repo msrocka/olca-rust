@@ -5,6 +5,7 @@ use std::ffi::c_void;
 #[allow(non_snake_case)]
 #[cfg_attr(target_os = "windows", link(name = "libumfpack"))]
 #[cfg_attr(target_os = "linux", link(name = "umfpack"))]
+#[cfg_attr(target_os = "macos", link(name = "umfpack"))]
 extern "C" {
     pub fn umfpack_di_symbolic(
         n_row: i32,
