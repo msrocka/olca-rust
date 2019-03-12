@@ -46,7 +46,7 @@ public class FFI {
 		case WINDOWS:
 			return "olcar.dll";
 		case LINUX:
-			return "olcar.so";
+			return "libolcar.so";
 		case MAC_OS:
 			return "olca.dylib";
 		default:

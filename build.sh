@@ -1,3 +1,4 @@
+cargo clean
 cargo build --release
 
-cp ./target/release/libjumf.so ./bin
+cp ./target/release/libolcar.so ./bin

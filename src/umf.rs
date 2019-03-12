@@ -1,7 +1,10 @@
 use std::ffi::c_void;
 
-#[link(name = "libumfpack")]  // it is just "umfpack" on Linux
+// #[link(name = "libumfpack")]
+
 #[allow(non_snake_case)]
+#[cfg_attr(target_os = "windows", link(name = "libumfpack"))]
+#[cfg_attr(target_os = "linux", link(name = "umfpack"))]
 extern "C" {
     pub fn umfpack_di_symbolic(
         n_row: i32,
