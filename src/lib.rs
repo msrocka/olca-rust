@@ -28,6 +28,7 @@ unsafe fn release_array_f64(env: *mut JNIEnv, array: &mut jdoubleArray, ptr: *mu
 }
 
 #[no_mangle]
+#[cfg(umfpack)]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     env: *mut JNIEnv,

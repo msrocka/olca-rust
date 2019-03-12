@@ -1,6 +1,7 @@
 package olcar;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 
@@ -17,7 +18,7 @@ public class UmfpackTest {
 
 	@Test
 	public void testSolve() {
-
+		assumeTrue("library with UMFPACK support", FFI.isWithUmfpack());
 		double[] x = new double[5];
 		Julia.umfSolve(5,
 				new int[] { 0, 2, 5, 9, 10, 12 },

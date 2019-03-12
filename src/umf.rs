@@ -2,6 +2,7 @@ use std::ffi::c_void;
 
 // #[link(name = "libumfpack")]
 
+#[cfg(umfpack)]
 #[allow(non_snake_case)]
 #[cfg_attr(target_os = "windows", link(name = "libumfpack"))]
 #[cfg_attr(target_os = "linux", link(name = "umfpack"))]
