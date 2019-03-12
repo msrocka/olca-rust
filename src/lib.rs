@@ -9,6 +9,24 @@ use std::ptr;
 mod umf;
 mod blas;
 
+const NULL: *mut u8 = ptr::null_mut();
+
+/*
+unsafe fn get_array_i32(env: *mut JNIEnv, array: &mut jintArray) -> *mut i32{
+    return (**env).GetIntArrayElements.unwrap()(env, *array, NULL);
+}
+*/
+
+/// Get the raw pointer of the given array from the JVM.
+unsafe fn get_array_f64(env: *mut JNIEnv, array: &mut jdoubleArray) -> *mut f64 {
+    return (**env).GetDoubleArrayElements.unwrap()(env, *array, NULL);
+}
+
+/// Give the data behind the raw pointer of the given array back to the JVM.
+unsafe fn release_array_f64(env: *mut JNIEnv, array: &mut jdoubleArray, ptr: *mut f64) {
+    (**env).ReleaseDoubleArrayElements.unwrap()(env, *array, ptr, 0);
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
@@ -22,7 +40,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     result: jdoubleArray,
 ) {
     unsafe {
-        let NULL: *mut u8 = ptr::null_mut();
+        // let NULL: *mut u8 = ptr::null_mut();
         let jvm = **env;
 
         let columnPointersPtr = jvm.GetIntArrayElements.unwrap()(env, columnPointers, NULL);
@@ -95,17 +113,20 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
     _class: jclass,
     m: jint,
     n: jint,
-    A: jdoubleArray,
-    x: jdoubleArray,
-    y: jdoubleArray) {
+    mut A: jdoubleArray,
+    mut x: jdoubleArray,
+    mut y: jdoubleArray) {
 
     unsafe {
-        let NULL: *mut u8 = ptr::null_mut();
-        let jvm = **env;
+        // let NULL: *mut u8 = ptr::null_mut();
+        // let jvm = **env;
 
-        let aPtr = jvm.GetDoubleArrayElements.unwrap()(env, A, NULL);
-        let xPtr = jvm.GetDoubleArrayElements.unwrap()(env, x, NULL);
-        let yPtr = jvm.GetDoubleArrayElements.unwrap()(env, y, NULL);
+        let aPtr = get_array_f64(env, &mut A);
+        let xPtr = get_array_f64(env, &mut x);
+        let yPtr = get_array_f64(env, &mut y);
+        // let aPtr = jvm.GetDoubleArrayElements.unwrap()(env, A, NULL);
+        // let xPtr = jvm.GetDoubleArrayElements.unwrap()(env, x, NULL);
+        // let yPtr = jvm.GetDoubleArrayElements.unwrap()(env, y, NULL);
 
         let mut trans = 'N' as c_char;
         let mut alpha:f64 = 1.0;
@@ -127,8 +148,11 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
             yPtr,
             &mut inc);
 
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, A, aPtr, 0);
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, x, xPtr, 0);
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, y, yPtr, 0);
+        release_array_f64(env, &mut A, aPtr);
+        release_array_f64(env, &mut x, xPtr);
+        release_array_f64(env, &mut y, yPtr);
+        // jvm.ReleaseDoubleArrayElements.unwrap()(env, A, aPtr, 0);
+        // jvm.ReleaseDoubleArrayElements.unwrap()(env, x, xPtr, 0);
+        // jvm.ReleaseDoubleArrayElements.unwrap()(env, y, yPtr, 0);
     }
 }
