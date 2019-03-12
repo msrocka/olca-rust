@@ -1,21 +1,22 @@
-package jumf;
+package olcar;
 
 import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openlca.julia.Julia;
 
-public class FFITest {
+public class UmfpackTest {
+
+	@BeforeClass
+	public static void setup() {
+		FFI.load(new File("../bin"));
+	}
 
 	@Test
-	public void test() {
-		File libDir = new File("../bin");
-		// FFI.load(libDir);
-
-		File lib = new File(libDir, "olcar.dll");
-		System.load(lib.getAbsolutePath());
+	public void testSolve() {
 
 		double[] x = new double[5];
 		Julia.umfSolve(5,
@@ -25,17 +26,7 @@ public class FFITest {
 						1. },
 				new double[] { 8., 45., -3., 3., 19. },
 				x);
-
 		 assertArrayEquals(
 				new double[] { 1d, 2d, 3d, 4d, 5d }, x, 1e-8);
-
-
-		System.out.println("mvmul java");
-		double[] a = { 1, 4, 2, 5, 3, 6 };
-		double[] x2 = { 2, 1, 0.5 };
-		double[] y = new double[2];
-		Julia.mvmult(2, 3, a, x2, y);
-		assertArrayEquals(new double[] { 5.5, 16 }, y, 1e-16);
-
 	}
 }
