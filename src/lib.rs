@@ -77,14 +77,23 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     }
 }
 
+/// Performs a dense matrix-vector multiplication of a `m` by `n` matrix `A`
+/// with a vector `x`: `y = A * x`.
+/// 
+/// * `m` - The number of rows of the matrix `A`
+/// * `n` - The number of columns of the matrix `A`
+/// * `A` - The matrix `A` stored in column-major order in an array.
+/// * `x` - The vector `x` as an array of size `n`.
+/// * `y` - The result vector `y` as an initialized array of size `m`.
+/// 
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
     env: *mut JNIEnv,
     _class: jclass,
-    rowsA: jint,
-    colsA: jint,
-    a: jdoubleArray,
+    m: jint,
+    n: jint,
+    A: jdoubleArray,
     x: jdoubleArray,
     y: jdoubleArray) {
 
@@ -92,7 +101,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let NULL: *mut u8 = ptr::null_mut();
         let jvm = **env;
 
-        let aPtr = jvm.GetDoubleArrayElements.unwrap()(env, a, NULL);
+        let aPtr = jvm.GetDoubleArrayElements.unwrap()(env, A, NULL);
         let xPtr = jvm.GetDoubleArrayElements.unwrap()(env, x, NULL);
         let yPtr = jvm.GetDoubleArrayElements.unwrap()(env, y, NULL);
 
@@ -100,8 +109,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let mut alpha:f64 = 1.0;
         let mut beta:f64 = 0.0;
         let mut inc:i64 = 1;
-        let mut rowsA_64:i64 = rowsA as i64;
-        let mut colsA_64:i64 = colsA as i64;
+        let mut rowsA_64:i64 = m as i64;
+        let mut colsA_64:i64 = n as i64;
 
         blas::dgemv(
             &mut trans,
@@ -116,7 +125,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
             yPtr,
             &mut inc);
 
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, a, aPtr, 0);
+        jvm.ReleaseDoubleArrayElements.unwrap()(env, A, aPtr, 0);
         jvm.ReleaseDoubleArrayElements.unwrap()(env, x, xPtr, 0);
         jvm.ReleaseDoubleArrayElements.unwrap()(env, y, yPtr, 0);
     }

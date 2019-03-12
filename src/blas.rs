@@ -5,8 +5,13 @@
 #[cfg_attr(target_os = "linux", link(name = "openblas64_"))]
 extern "C" {
 
-    #[cfg_attr(target_os = "windows", link_name="dgemv64_" )]
-    #[cfg_attr(target_os = "linux", link_name="dgemv_64_" )]
+    /// [DGEMV](http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html)
+    ///  performs one of the matrix-vector operations
+    /// `y := alpha*A*x + beta*y`   or   `y := alpha*A**T*x + beta*y`
+    /// where `alpha` and `beta` are scalars, `x` and `y` are vectors and `A`
+    /// is an `m` by `n` matrix.
+    #[cfg_attr(target_os = "windows", link_name = "dgemv64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgemv_64_")]
     pub fn dgemv(
         TRANS: *mut char,
         M: *mut i64,
@@ -18,5 +23,6 @@ extern "C" {
         INCX: *mut i64,
         BETA: *mut f64,
         Y: *mut f64,
-        INCY: *mut i64);
+        INCY: *mut i64,
+    );
 }

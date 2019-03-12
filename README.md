@@ -22,6 +22,9 @@ versions of these libraries for the respective platforms directly from the
    in the project root)
 3. Run the Java tests from the project root
 
+```bash
+cargo doc --document-private-items --no-deps
+```
 
 ### Windows
 On Windows you can use [Dependency Walker](http://www.dependencywalker.com/) to
