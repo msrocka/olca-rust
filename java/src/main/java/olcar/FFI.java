@@ -28,9 +28,10 @@ public class FFI {
 			if (loaded.get())
 				return true;
 			try {
-				String lib = getLibName();
-				File f = new File(folder, lib);
-				System.load(f.getAbsolutePath());
+				for (String lib : libs()) {
+					File f = new File(folder, lib);
+					System.load(f.getAbsolutePath());
+				}
 				loaded.set(true);
 				return true;
 			} catch (Exception e) {
@@ -40,30 +41,25 @@ public class FFI {
 		}
 	}
 
-	private static String getLibName() {
+	private static String[] libs() {
 		OS os = OS.get();
-		switch (os) {
-		case WINDOWS:
-			return "olcar.dll";
-		case LINUX:
-			return "libolcar.so";
-		case MAC_OS:
-			return "libolcar.dylib";
-		default:
-			return "olcar.dll";
+		if (os == OS.WINDOWS) {
+			return new String[] { 
+				"olcar.dll" 
+			};
 		}
+		if (os == OS.LINUX) {
+			return new String[] { 
+				"libolcar.so" 
+			};
+		}
+		if (os == OS.MAC_OS) {
+			return new String[] {
+				"libumfpack.dylib",
+				"libolcar.dylib" 
+			};
+		}
+		return new String[] {};
 	}
 
-	/*
-	 * private static String[] libs() { OS os = OS.get(); if (os == OS.WINDOWS) {
-	 * return new String[] { "libwinpthread-1.dll", "libgcc_s_seh-1.dll",
-	 * "libquadmath-0.dll", "libgfortran-3.dll", "libopenblas64_.dll",
-	 * "libsuitesparseconfig.dll", "libcolamd.dll", "libamd.dll", "libcamd.dll",
-	 * "libccolamd.dll", "libcholmod.dll", "libumfpack.dll", "jumf.dll" }; } if (os
-	 * == OS.LINUX) { return new String[] { "libgcc_s.so.1", "libstdc++.so.6",
-	 * "libquadmath.so.0", "libgfortran.so.4", "libopenblas64_.so",
-	 * "libsuitesparseconfig.so", "libcolamd.so", "libamd.so", "libcamd.so",
-	 * "libccolamd.so", "libcholmod.so", "libumfpack.so", "libjumf.so" }; } return
-	 * new String[] {}; }
-	 */
 }

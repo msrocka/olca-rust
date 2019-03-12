@@ -2,6 +2,7 @@
 /bin/
 
 .idea/
+.vscode/
 
 **/*.rs.bk
 Cargo.lock
