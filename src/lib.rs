@@ -12,12 +12,6 @@ mod blas;
 
 const NULL: *mut u8 = ptr::null_mut();
 
-/*
-unsafe fn get_array_i32(env: *mut JNIEnv, array: &mut jintArray) -> *mut i32{
-    return (**env).GetIntArrayElements.unwrap()(env, *array, NULL);
-}
-*/
-
 /// Get the raw pointer of the given array from the JVM.
 unsafe fn get_array_f64(env: *mut JNIEnv, array: jdoubleArray) -> *mut f64 {
     return (**env).GetDoubleArrayElements.unwrap()(env, array, NULL);

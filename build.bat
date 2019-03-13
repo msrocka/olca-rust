@@ -15,12 +15,12 @@ cd ..
 
 rem 1.) build the version with UMFPACK bindings
 cargo clean
-set RUSTFLAGS=--cfg umfpack
+set RUSTFLAGS=--cfg umfpack -C target-feature=+crt-static
 cargo build --release
 copy /y target\release\olcar.dll bin\olcar_withumf.dll
 
 rem 2.) build the version without UMFPACK
 cargo clean
-set RUSTFLAGS=
+set RUSTFLAGS=-C target-feature=+crt-static
 cargo build --release
 copy /y target\release\olcar.dll bin\olcar.dll
