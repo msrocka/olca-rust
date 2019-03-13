@@ -1,6 +1,5 @@
+#[cfg(umfpack)]
 use std::ffi::c_void;
-
-// #[link(name = "libumfpack")]
 
 #[cfg(umfpack)]
 #[allow(non_snake_case)]

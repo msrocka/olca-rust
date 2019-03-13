@@ -2,9 +2,12 @@ extern crate jni_sys;
 extern crate libc;
 
 use jni_sys::*;
-use std::ffi::c_void;
 use libc::c_char;
 use std::ptr;
+
+#[cfg(umfpack)]
+use std::ffi::c_void;
+use crate::blas::dgemm;
 
 mod umf;
 mod blas;
@@ -18,13 +21,13 @@ unsafe fn get_array_i32(env: *mut JNIEnv, array: &mut jintArray) -> *mut i32{
 */
 
 /// Get the raw pointer of the given array from the JVM.
-unsafe fn get_array_f64(env: *mut JNIEnv, array: &mut jdoubleArray) -> *mut f64 {
-    return (**env).GetDoubleArrayElements.unwrap()(env, *array, NULL);
+unsafe fn get_array_f64(env: *mut JNIEnv, array: jdoubleArray) -> *mut f64 {
+    return (**env).GetDoubleArrayElements.unwrap()(env, array, NULL);
 }
 
 /// Give the data behind the raw pointer of the given array back to the JVM.
-unsafe fn release_array_f64(env: *mut JNIEnv, array: &mut jdoubleArray, ptr: *mut f64) {
-    (**env).ReleaseDoubleArrayElements.unwrap()(env, *array, ptr, 0);
+unsafe fn release_array_f64(env: *mut JNIEnv, array: jdoubleArray, ptr: *mut f64) {
+    (**env).ReleaseDoubleArrayElements.unwrap()(env, array, ptr, 0);
 }
 
 #[no_mangle]
@@ -114,27 +117,20 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
     _class: jclass,
     m: jint,
     n: jint,
-    mut A: jdoubleArray,
-    mut x: jdoubleArray,
-    mut y: jdoubleArray) {
-
+    A: jdoubleArray,
+    x: jdoubleArray,
+    y: jdoubleArray) {
     unsafe {
-        // let NULL: *mut u8 = ptr::null_mut();
-        // let jvm = **env;
-
-        let aPtr = get_array_f64(env, &mut A);
-        let xPtr = get_array_f64(env, &mut x);
-        let yPtr = get_array_f64(env, &mut y);
-        // let aPtr = jvm.GetDoubleArrayElements.unwrap()(env, A, NULL);
-        // let xPtr = jvm.GetDoubleArrayElements.unwrap()(env, x, NULL);
-        // let yPtr = jvm.GetDoubleArrayElements.unwrap()(env, y, NULL);
+        let aPtr = get_array_f64(env, A);
+        let xPtr = get_array_f64(env, x);
+        let yPtr = get_array_f64(env, y);
 
         let mut trans = 'N' as c_char;
-        let mut alpha:f64 = 1.0;
-        let mut beta:f64 = 0.0;
-        let mut inc:i64 = 1;
-        let mut rowsA_64:i64 = m as i64;
-        let mut colsA_64:i64 = n as i64;
+        let mut alpha: f64 = 1.0;
+        let mut beta: f64 = 0.0;
+        let mut inc: i64 = 1;
+        let mut rowsA_64: i64 = m as i64;
+        let mut colsA_64: i64 = n as i64;
 
         blas::dgemv(
             &mut trans,
@@ -149,11 +145,54 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
             yPtr,
             &mut inc);
 
-        release_array_f64(env, &mut A, aPtr);
-        release_array_f64(env, &mut x, xPtr);
-        release_array_f64(env, &mut y, yPtr);
-        // jvm.ReleaseDoubleArrayElements.unwrap()(env, A, aPtr, 0);
-        // jvm.ReleaseDoubleArrayElements.unwrap()(env, x, xPtr, 0);
-        // jvm.ReleaseDoubleArrayElements.unwrap()(env, y, yPtr, 0);
+        release_array_f64(env, A, aPtr);
+        release_array_f64(env, x, xPtr);
+        release_array_f64(env, y, yPtr);
+    }
+}
+
+/// Performs a dense matrix-matrix multiplication: `C := A * B`
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_mmult(
+    env: *mut JNIEnv,
+    _class: jclass,
+    rowsA: jint,
+    colsB: jint,
+    k: jint,
+    A: jdoubleArray,
+    B: jdoubleArray,
+    C: jdoubleArray) {
+    unsafe {
+        let ptrA = get_array_f64(env, A);
+        let ptrB = get_array_f64(env, B);
+        let ptrC = get_array_f64(env, C);
+
+        let mut trans = 'N' as c_char;
+        let mut alpha: f64 = 1.0;
+        let mut beta: f64 = 0.0;
+        let mut rowsA_64 = rowsA as i64;
+        let mut colsB_64 = colsB as i64;
+        let mut k_64 = k as i64;
+
+        dgemm(
+            &mut trans,
+            &mut trans,
+            &mut rowsA_64,
+            &mut colsB_64,
+            &mut k_64,
+            &mut alpha,
+            ptrA,
+            &mut rowsA_64,
+            ptrB,
+            &mut k_64,
+            &mut beta,
+            ptrC,
+            &mut rowsA_64,
+        );
+
+        release_array_f64(env, A, ptrA);
+        release_array_f64(env, B, ptrB);
+        release_array_f64(env, C, ptrC);
     }
 }

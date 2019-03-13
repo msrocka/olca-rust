@@ -4,6 +4,8 @@ String rtype(String ctype) {
       return "*mut i64";
     case "jdouble":
       return "*mut f64";
+    case "jchar":
+      return "*mut c_char";
     default:
       return "?";
   }
@@ -11,16 +13,19 @@ String rtype(String ctype) {
 
 main(List<String> args) {
   var params = """
+    jchar *TRANSA,
+    jchar *TRANSB,
     int64_t *M,
     int64_t *N,
+    int64_t *K,
     jdouble *ALPHA,
     jdouble *A,
     int64_t *LDA,
-    jdouble *X,
-    int64_t *INCX,
+    jdouble *B,
+    int64_t *LDB,
     jdouble *BETA,
-    jdouble *Y,
-    int64_t *INCY
+    jdouble *C,
+    int64_t *LDC
   """;
   params.trim().split(",").forEach((s) {
     var param = s.trim().split(" \*");

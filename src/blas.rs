@@ -31,4 +31,35 @@ extern "C" {
         Y: *mut f64,
         INCY: *mut i64,
     );
+
+    /// [DGEMM](http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html)
+    /// performs one of the matrix-matrix operations
+    ///
+    /// `C := alpha*op( A )*op( B ) + beta*C`,
+    ///
+    /// where  `op( X )` is one of
+    ///
+    /// `op( X ) = X`   or   `op( X ) = X**T`,
+    ///
+    /// `alpha` and `beta` are scalars, and `A`, `B` and `C` are matrices,
+    /// with `op( A )` an `m` by `k` matrix,  `op( B )`  a  `k` by `n`
+    /// matrix and `C` an `m` by `n` matrix.
+    #[cfg_attr(target_os = "windows", link_name = "dgemm64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgemm_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgemm_64_")]
+    pub fn dgemm(
+        TRANSA: *mut c_char,
+        TRANSB: *mut c_char,
+        M: *mut i64,
+        N: *mut i64,
+        K: *mut i64,
+        ALPHA: *mut f64,
+        A: *mut f64,
+        LDA: *mut i64,
+        B: *mut f64,
+        LDB: *mut i64,
+        BETA: *mut f64,
+        C: *mut f64,
+        LDC: *mut i64,
+    );
 }
