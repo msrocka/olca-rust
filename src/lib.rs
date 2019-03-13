@@ -28,6 +28,18 @@ unsafe fn release_array_f64(env: *mut JNIEnv, array: jdoubleArray, ptr: *mut f64
     (**env).ReleaseDoubleArrayElements.unwrap()(env, array, ptr, 0);
 }
 
+/// Get the raw pointer of the given array from the JVM.
+#[cfg(umfpack)]
+unsafe fn get_array_i32(env: *mut JNIEnv, array: jintArray) -> *mut i32 {
+    return (**env).GetIntArrayElements.unwrap()(env, array, NULL);
+}
+
+/// Give the data behind the raw pointer of the given array back to the JVM.
+#[cfg(umfpack)]
+unsafe fn release_array_i32(env: *mut JNIEnv, array: jintArray, ptr: *mut i32) {
+    (**env).ReleaseIntArrayElements.unwrap()(env, array, ptr, 0);
+}
+
 #[no_mangle]
 #[cfg(umfpack)]
 #[allow(non_snake_case)]
@@ -42,14 +54,12 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     result: jdoubleArray,
 ) {
     unsafe {
-        // let NULL: *mut u8 = ptr::null_mut();
-        let jvm = **env;
 
-        let columnPointersPtr = jvm.GetIntArrayElements.unwrap()(env, columnPointers, NULL);
-        let rowIndicesPtr = jvm.GetIntArrayElements.unwrap()(env, rowIndices, NULL);
-        let valuesPtr = jvm.GetDoubleArrayElements.unwrap()(env, values, NULL);
-        let demandPtr = jvm.GetDoubleArrayElements.unwrap()(env, demand, NULL);
-        let resultPtr = jvm.GetDoubleArrayElements.unwrap()(env, result, NULL);
+        let columnPointersPtr = get_array_i32(env, columnPointers);
+        let rowIndicesPtr = get_array_i32(env, rowIndices);
+        let valuesPtr = get_array_f64(env, values);
+        let demandPtr = get_array_f64(env, demand);
+        let resultPtr = get_array_f64(env, result);
 
         let nullF64 = NULL as *mut f64;
         let mut Symbolic: *mut c_void = ptr::null_mut();
@@ -91,11 +101,11 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
         );
         umf::umfpack_di_free_numeric(&mut Numeric);
 
-        jvm.ReleaseIntArrayElements.unwrap()(env, columnPointers, columnPointersPtr, 0);
-        jvm.ReleaseIntArrayElements.unwrap()(env, rowIndices, rowIndicesPtr, 0);
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, values, valuesPtr, 0);
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, demand, demandPtr, 0);
-        jvm.ReleaseDoubleArrayElements.unwrap()(env, result, resultPtr, 0);
+        release_array_i32(env, columnPointers, columnPointersPtr);
+        release_array_i32(env, rowIndices, rowIndicesPtr);
+        release_array_f64(env, values, valuesPtr);
+        release_array_f64(env, demand, demandPtr);
+        release_array_f64(env, result, resultPtr);
     }
 }
 
