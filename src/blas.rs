@@ -78,4 +78,35 @@ extern "C" {
         LDB: *mut i64,
         INFO: *mut i64,
     );
+
+    /// [DGETRF](http://www.netlib.org/lapack/explore-html/d3/d6a/dgetrf_8f.html)
+    /// computes an LU factorization of a general M-by-N matrix A using partial
+    /// pivoting with row interchanges.
+    #[cfg_attr(target_os = "windows", link_name = "dgetrf64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgetrf_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgetrf_64_")]
+    pub fn dgetrf(
+        M: *mut i64,
+        N: *mut i64,
+        A: *mut f64,
+        LDA: *mut i64,
+        IPIV: *mut i64,
+        INFO: *mut i64,
+    );
+
+    /// [DGETRI](http://www.netlib.org/lapack/explore-html/df/da4/dgetri_8f.html)
+    /// DGETRI computes the inverse of a matrix using the LU factorization
+    /// computed by DGETRF.
+    #[cfg_attr(target_os = "windows", link_name = "dgetri64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgetri_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgetri_64_")]
+    pub fn dgetri(
+        N: *mut i64,
+        A: *mut f64,
+        LDA: *mut i64,
+        IPIV: *mut i64,
+        WORK: *mut f64,
+        LWORK: *mut i64,
+        INFO: *mut i64,        
+    );
 }

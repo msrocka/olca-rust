@@ -230,3 +230,54 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solve(
         return info as jint;
     }
 }
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_invert(
+    env: *mut JNIEnv,
+    _class: jclass,
+    n: jint,
+    A: jdoubleArray) -> jint {
+    unsafe {
+        let mut n_64 = n as i64;
+        let ptrA = get_array_f64(env, A);
+        let ipiv = malloc((8 * n) as usize) as *mut i64;
+        let mut info: i64 = 0;
+
+        // calculate the factorization
+        blas::dgetrf(
+            &mut n_64,
+            &mut n_64,
+            ptrA,
+            &mut n_64,
+            ipiv,
+            &mut info);
+
+
+        if info != 0 {
+            // factorization error
+            free(ipiv as *mut c_void);
+            release_array_f64(env, A, ptrA);
+            return info as jint;
+        }
+
+        let mut lwork = (64 * 2 * n) as i64;
+        let work = malloc((8 * lwork) as usize) as *mut f64;
+
+        // invert it
+        blas::dgetri(
+            &mut n_64,
+            ptrA,
+            &mut n_64,
+            ipiv,
+            work,
+            &mut lwork,
+            &mut info);
+
+        free(ipiv as *mut c_void);
+        free(work as *mut c_void);
+        release_array_f64(env, A, ptrA);
+
+        return info as jint;
+    }
+}

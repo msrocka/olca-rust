@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openlca.julia.Julia;
 
@@ -35,7 +34,6 @@ public class LapackTest {
 	}
 
 	@Test
-	@Ignore
 	public void testInvert() {
 		double[] a = { 1, -4, 0, 2 };
 		Julia.invert(2, a);
@@ -43,7 +41,6 @@ public class LapackTest {
 	}
 
 	@Test
-	@Ignore
 	public void testInvertSingularMatrix() {
 		double[] a = { 1, -1, 0, 0 };
 		int info = Julia.invert(2, a);
