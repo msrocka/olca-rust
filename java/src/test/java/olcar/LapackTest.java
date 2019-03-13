@@ -13,7 +13,7 @@ public class LapackTest {
 
 	@BeforeClass
 	public static void setup() {
-		FFI.load(new File("../bin"));
+		FFI.load(new File(Tests.libDir));
 	}
 
 	@Test

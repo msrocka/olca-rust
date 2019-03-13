@@ -1,6 +1,7 @@
 package olcar;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 
@@ -17,11 +18,12 @@ public class UmfpackTest {
 
 	@BeforeClass
 	public static void setup() {
-		FFI.load(new File("../bin"));
+		FFI.load(new File(Tests.libDir));
 	}
 
 	@Test
 	public void testSolveNative() {
+		assumeTrue(FFI.isWithUmfpack());
 		double[] x = new double[5];
 		Julia.umfSolve(5,
 				new int[] { 0, 2, 5, 9, 10, 12 },
@@ -36,6 +38,7 @@ public class UmfpackTest {
 
 	@Test
 	public void testSolveMatrix() {
+		assumeTrue(FFI.isWithUmfpack());
 		HashPointMatrix m = new HashPointMatrix(new double[][] {
 				{ 2.0, 3.0, 0.0, 0.0, 0.0 },
 				{ 3.0, 0.0, 4.0, 0.0, 6.0 },
@@ -52,6 +55,7 @@ public class UmfpackTest {
 	@Test
 	@Ignore
 	public void testFactorizeMatrix() {
+		assumeTrue(FFI.isWithUmfpack());
 		HashPointMatrix m = new HashPointMatrix(new double[][] {
 				{ 2.0, 3.0, 0.0, 0.0, 0.0 },
 				{ 3.0, 0.0, 4.0, 0.0, 6.0 },
