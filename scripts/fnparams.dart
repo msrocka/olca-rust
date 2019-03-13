@@ -13,24 +13,19 @@ String rtype(String ctype) {
 
 main(List<String> args) {
   var params = """
-    jchar *TRANSA,
-    jchar *TRANSB,
-    int64_t *M,
-    int64_t *N,
-    int64_t *K,
-    jdouble *ALPHA,
+    int64_t *n,
+    int64_t *nrhs,
     jdouble *A,
-    int64_t *LDA,
+    int64_t *lda,
+    int64_t *ipiv,
     jdouble *B,
-    int64_t *LDB,
-    jdouble *BETA,
-    jdouble *C,
-    int64_t *LDC
+    int64_t *ldb,
+    int64_t *info
   """;
   params.trim().split(",").forEach((s) {
     var param = s.trim().split(" \*");
     var type = rtype(param[0].trim());
-    var name = param[1].trim();
+    var name = param[1].trim().toUpperCase();
     print("$name: $type,");
   });
 }

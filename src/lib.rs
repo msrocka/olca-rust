@@ -1,13 +1,11 @@
 extern crate jni_sys;
 extern crate libc;
 
-use jni_sys::*;
-use libc::c_char;
 use std::ptr;
-
-#[cfg(umfpack)]
 use std::ffi::c_void;
-use crate::blas::dgemm;
+
+use libc::{c_char, malloc, free};
+use jni_sys::*;
 
 mod umf;
 mod blas;
@@ -175,7 +173,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mmult(
         let mut colsB_64 = colsB as i64;
         let mut k_64 = k as i64;
 
-        dgemm(
+        blas::dgemm(
             &mut trans,
             &mut trans,
             &mut rowsA_64,
@@ -194,5 +192,41 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mmult(
         release_array_f64(env, A, ptrA);
         release_array_f64(env, B, ptrB);
         release_array_f64(env, C, ptrC);
+    }
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_solve(
+    env: *mut JNIEnv,
+    _class: jclass,
+    n: jint,
+    nrhs: jint,
+    A: jdoubleArray,
+    B: jdoubleArray) -> jint {
+    unsafe {
+        let ptrA = get_array_f64(env, A);
+        let ptrB = get_array_f64(env, B);
+
+        let mut n_64 = n as i64;
+        let mut nrhs_64 = nrhs as i64;
+        let ipiv = malloc((8 * n) as usize) as *mut i64;
+        let mut info: i64 = 0;
+
+        blas::dgesv(
+            &mut n_64,
+            &mut nrhs_64,
+            ptrA,
+            &mut n_64,
+            ipiv,
+            ptrB,
+            &mut n_64,
+            &mut info);
+
+        free(ipiv as *mut c_void);
+        release_array_f64(env, A, ptrA);
+        release_array_f64(env, B, ptrB);
+
+        return info as jint;
     }
 }

@@ -9,7 +9,6 @@ use libc::c_char;
 #[cfg_attr(target_os = "linux", link(name = "openblas64_"))]
 #[cfg_attr(target_os = "macos", link(name = "openblas64_"))]
 extern "C" {
-
     /// [DGEMV](http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html)
     ///  performs one of the matrix-vector operations
     /// `y := alpha*A*x + beta*y`   or   `y := alpha*A**T*x + beta*y`
@@ -61,5 +60,22 @@ extern "C" {
         BETA: *mut f64,
         C: *mut f64,
         LDC: *mut i64,
+    );
+
+    /// [DGESV](http://www.netlib.org/lapack/explore-html/d8/d72/dgesv_8f.html)
+    /// computes the solution to system of linear equations `A * X = B` for
+    /// GE matrices
+    #[cfg_attr(target_os = "windows", link_name = "dgesv64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgesv_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgesv_64_")]
+    pub fn dgesv(
+        N: *mut i64,
+        NRHS: *mut i64,
+        A: *mut f64,
+        LDA: *mut i64,
+        IPIV: *mut i64,
+        B: *mut f64,
+        LDB: *mut i64,
+        INFO: *mut i64,
     );
 }
