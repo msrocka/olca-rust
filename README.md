@@ -66,7 +66,7 @@ analyze the library dependencies. The following lists the library dependencies
 # UMFPACK
 -> libumfpack.dll
  -> libcholmod.dll
-	-> libccolamd.dll 
+  -> libccolamd.dll 
    -> libcolamd.dll
     -> libcamd.dll
      -> libamd.dll
@@ -83,10 +83,8 @@ for the Rust compiler) is in your `PATH` (e.g. something like this:
 
 
 ### Linux
-* for Rust, you need to have gcc installed (the cc linker)
-* the library name of UMFPACK is `libumfpack.so` but the linking name is `umfpack`:
-  `#[link(name = "umfpack"]`
 
+**todo**
 The folder with the shared libraries needs to be in the `LD_LIBRARY_PATH`. When this
 is the case the tests run, e.g.:
 
@@ -102,6 +100,10 @@ see also: https://stackoverflow.com/a/7284911
 Eclipse should add the folder with the executable launcher to the `LD_LIBRARY_PATH`:
 https://eclipsesource.com/blogs/2012/08/18/using-shared-libraries-with-eclipse-rcp/
 
+?
 
+### macOS
+
+**todo**
   
   
