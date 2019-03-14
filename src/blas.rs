@@ -2,8 +2,6 @@ extern crate libc;
 
 use libc::c_char;
 
-// #[link(name = "libopenblas64_")]
-
 #[allow(non_snake_case)]
 #[cfg_attr(target_os = "windows", link(name = "libopenblas64_"))]
 #[cfg_attr(target_os = "linux", link(name = "openblas64_"))]
