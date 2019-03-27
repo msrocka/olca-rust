@@ -103,7 +103,30 @@ https://eclipsesource.com/blogs/2012/08/18/using-shared-libraries-with-eclipse-r
 ?
 
 ### macOS
+On macOS, library dependencies can be inspected with the `otool` command:
 
-**todo**
-  
-  
+```
+otool -L libolcar.dylib
+```
+
+Currently, we have the following dependency tree:
+
+```
+# OpenBLAS
+-> libolcar.dylib
+  -> libopenblas64_.dylib
+    -> libgfortran.4.dylib
+      -> libquadmath.0.dylib
+        -> libgcc_s.1.dylib
+
+# OpenBLAS + UMFPACK
+-> libolcar_withumf.dylib
+  -> libumfpack.dylib
+    -> libcholmod.dylib
+      -> libccolamd.dylib
+        -> libcolamd.dylib
+          -> libcamd.dylib
+            -> libamd.dylib
+              -> libsuitesparseconfig.dylib
+                + OpenBLAS
+```
