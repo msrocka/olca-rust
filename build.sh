@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# 1.) build the version with UMFPACK bindings
+# the compiled libraries go into the `bin` folder
+mkdir -p bin
+
+# 1.) build the version with UMFPACK bindings: libolcar_withumf
 cargo clean
 export RUSTFLAGS="--cfg umfpack -C target-feature=+crt-static"
 cargo build --release
@@ -17,7 +20,7 @@ fi
 cp $LIB "./bin/$DIST"
 
 
-# 2.) build the version without UMFPACK
+# 2.) build the version without UMFPACK: libolcar_withumf
 cargo clean
 export RUSTFLAGS="-C target-feature=+crt-static"
 cargo build --release
