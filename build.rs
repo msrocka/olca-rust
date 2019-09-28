@@ -19,8 +19,8 @@ fn main() {
     let libdir_key: &str = libdir_key.as_str();
     let mut libdir: Option<&str> = None;
 
-    let config = fs::read_to_string("config.toml")
-        .expect("Could not read config.toml");
+    let config = fs::read_to_string("config")
+        .expect("Could not read config file");
     for line in config.lines() {
         let l: &str = line.trim();
         if !l.starts_with(libdir_key) {
