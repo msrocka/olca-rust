@@ -1,1 +1,2 @@
 macos-julia-lib-dir = /Applications/Julia-1.2.app/Contents/Resources/julia/lib/julia
+linux-julia-lib-dir = /usr/share/julia-1.2.0/lib/julia
