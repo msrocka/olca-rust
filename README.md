@@ -51,6 +51,8 @@ python scripts/dist.py   # create the distribution packages
 As said above, we directly take the compiled libraries from the respective
 [Julia](https://julialang.org/) distribution packages.
 
+![](./deps.png)
+
 ### Windows
 On Windows you can use [Dependency Walker](http://www.dependencywalker.com/) to
 analyze the library dependencies. The following lists the library dependencies

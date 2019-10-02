@@ -40,6 +40,15 @@ def get_lib_ext() -> str:
     sys.exit("unknown os: " + _os)
 
 
+def as_lib(name: str) -> str:
+    _os = get_os()
+    prefix = ""
+    if _os != OS_WINDOWS:
+        if not name.startswith("lib"):
+            prefix = "lib"
+    return prefix + name + get_lib_ext()
+
+
 def get_julia_libdir():
     _os = get_os()
     libdir = None
@@ -123,8 +132,7 @@ if __name__ == '__main__':
     if julia_libdir is None:
         sys.exit("Could not find the Julia lib folder")
     libs = os.listdir(julia_libdir)
-    entry = os.path.join(PROJECT_ROOT, "bin",
-                         "libolcar_withumf" + get_lib_ext())
+    entry = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
     # print(get_deps(entry, libs))
     dag = get_dep_dag(entry)
     viz(dag)
