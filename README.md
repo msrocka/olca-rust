@@ -75,7 +75,7 @@ analyze the library dependencies. The following lists the library dependencies
 ```
 
 On Windows, we also need to [generate a lib-file](https://stackoverflow.com/a/16127548/599575)
-for each library we want to link again. This is done automatically from the
+for each library we want to link against. This is done automatically from the
 definition files in the `windefs` in the `build.bat` script but this requires
 that the `lib` tool from the MSVC 2017 build tools (which are anyhow required
 for the Rust compiler) is in your `PATH` (e.g. something like this:

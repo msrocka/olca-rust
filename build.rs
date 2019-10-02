@@ -15,6 +15,11 @@ fn main() {
     // config.toml file. if we cannot find it, we take
     // the ./bin folder as library path
 
+    if OS == "windows" {
+        println!("cargo:rustc-link-search=./bin");
+        return;
+    }
+
     let libdir_key: String = format!("{}-julia-lib-dir", OS);
     let libdir_key: &str = libdir_key.as_str();
     let mut libdir: Option<&str> = None;

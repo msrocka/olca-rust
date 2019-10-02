@@ -24,3 +24,8 @@ cargo clean
 set RUSTFLAGS=-C target-feature=+crt-static
 cargo build --release
 copy /y target\release\olcar.dll bin\olcar.dll
+
+rem delete the lib files and resources
+del /s /q /f bin\*.lib
+del /s /q /f bin\*.exp
+del /s /q /f bin\*.def
