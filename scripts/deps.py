@@ -116,6 +116,52 @@ def get_dep_dag(entry: str) -> Node:
     return root
 
 
+def topo_sort(dag: Node) -> list:
+    in_degrees = {}
+    dependents = {}
+    queue = [dag]
+    handled = set()
+    while len(queue) != 0:
+        n = queue.pop(0)    # type: Node
+        if n.name in handled:
+            continue
+        handled.add(n.name)
+        if n.name not in in_degrees:
+            in_degrees[n.name] = 0
+        for dep in n.deps:
+            queue.append(dep)
+            if dep.name not in in_degrees:
+                in_degrees[dep.name] = 0
+            depl = dependents.get(dep.name)
+            if depl is None:
+                depl = []
+                dependents[dep.name] = depl
+            depl.append(n.name)
+            in_degrees[n.name] = in_degrees[n.name] + 1
+
+    ordered = []
+    while len(in_degrees) != 0:
+
+        lib = None
+        for _lib, _indeg in in_degrees.items():
+            if _indeg == 0:
+                lib = _lib
+                break
+        if lib is None:
+            sys.exit("could not calculate dependency order;"
+                     + " are there cycles in the dependencies?")
+
+        ordered.append(lib)
+        in_degrees.pop(lib)
+        depl = dependents.pop(lib, None)
+        if depl is None:
+            continue
+        for dependent in depl:
+            in_degrees[dependent] = in_degrees[dependent] - 1
+
+    return ordered
+
+
 def viz(dep_dag: Node):
     print("digraph g {")
     queue = [dep_dag]
@@ -136,3 +182,4 @@ if __name__ == '__main__':
     # print(get_deps(entry, libs))
     dag = get_dep_dag(entry)
     viz(dag)
+    print(topo_sort(dag))
