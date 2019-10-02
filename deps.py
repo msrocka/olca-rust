@@ -3,7 +3,7 @@ import platform
 import subprocess
 import sys
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 OS_MACOS = "macos"
 OS_WINDOWS = "windows"
@@ -162,9 +162,13 @@ def topo_sort(dag: Node) -> list:
     return ordered
 
 
-def viz(dep_dag: Node):
+def viz():
+    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    if not os.path.exists(wiumf):
+        sys.exit(wiumf + " does not exist")
+    dag = get_dep_dag(wiumf)
     print("digraph g {")
-    queue = [dep_dag]
+    queue = [dag]
     while len(queue) != 0:
         n = queue.pop(0)
         for dep in n.deps:
@@ -173,13 +177,26 @@ def viz(dep_dag: Node):
     print("}")
 
 
+def collect() -> list:
+    """Collect all dependecies in a list."""
+    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    if not os.path.exists(wiumf):
+        sys.exit(wiumf + " does not exist")
+    dag = get_dep_dag(wiumf)
+    return topo_sort(dag)
+
+
+def main():
+    args = sys.argv
+    if len(args) < 2:
+        print(collect())
+        return
+    cmd = args[1]
+    if cmd == "viz":
+        viz()
+    elif cmd == "collect":
+        print(collect())
+
+
 if __name__ == '__main__':
-    julia_libdir = get_julia_libdir()
-    if julia_libdir is None:
-        sys.exit("Could not find the Julia lib folder")
-    libs = os.listdir(julia_libdir)
-    entry = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
-    # print(get_deps(entry, libs))
-    dag = get_dep_dag(entry)
-    viz(dag)
-    print(topo_sort(dag))
+    main()
