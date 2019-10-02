@@ -265,12 +265,10 @@ def java():
     for lib in libs:
         print("      \"%s\"," % lib)
     print("    };")
-    print("  }")
 
     woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
     libs = topo_sort(get_dep_dag(woumf))
-    print("if (os == %s) {" % _os)
-    print("  else {")
+    print("  } else {")
     print("    return new String[] {")
     for lib in libs:
         print("      \"%s\"," % lib)
