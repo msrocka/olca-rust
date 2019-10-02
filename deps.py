@@ -247,6 +247,37 @@ def dist() -> list:
     shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
 
 
+def java():
+    _os = get_os()
+    if _os == OS_LINUX:
+        _os = "OS.LINUX"
+    elif _os == OS_MACOS:
+        _os = "OS.MAC"
+    elif _os == OS_WINDOWS:
+        _os = "OS.WINDOWS"
+ 
+    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    libs = topo_sort(get_dep_dag(wiumf))
+
+    print("if (os == %s) {" % _os)
+    print("  if (opt == LinkOption.ALL) {")
+    print("    return new String[] {")
+    for lib in libs:
+        print("      \"%s\"," % lib)
+    print("    };")
+    print("  }")
+
+    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
+    libs = topo_sort(get_dep_dag(woumf))
+    print("if (os == %s) {" % _os)
+    print("  else {")
+    print("    return new String[] {")
+    for lib in libs:
+        print("      \"%s\"," % lib)
+    print("    };")
+    print("  }")
+    print("}")
+
 def main():
     args = sys.argv
     if len(args) < 2:
@@ -261,6 +292,8 @@ def main():
         sync()
     elif cmd == "dist":
         dist()
+    elif cmd == "java":
+        java()
 
 
 if __name__ == '__main__':
