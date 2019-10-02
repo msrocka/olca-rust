@@ -78,16 +78,20 @@ def get_deps(lib_file: str, libs: list) -> list:
         cmd = ["otool", "-L", lib_file]
     if _os == OS_WINDOWS:
         cmd = ["Dependencies.exe", "-imports", lib_file]
-    # TODO linux
+    if _os == OS_LINUX:
+        cmd = ["ldd", lib_file]
     if cmd is None:
         sys.exit("no deps command for os " + _os)
 
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    # in Python 3.7 we have capture_output and text flags
+    # but we make this compatible with Python 3.6 here
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE)
     out = None
     if proc.stdout is not None:
-        out = proc.stdout
+        out = proc.stdout.decode(sys.stdout.encoding)
     elif proc.stderr is not None:
-        out = proc.stderr
+        out = proc.stderr.decode(sys.stderr.encoding)
     if out is None:
         return []
     deps = []
