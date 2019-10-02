@@ -1,6 +1,8 @@
+import datetime
 import os
 import platform
 import subprocess
+import shutil
 import sys
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -183,7 +185,62 @@ def collect() -> list:
     if not os.path.exists(wiumf):
         sys.exit(wiumf + " does not exist")
     dag = get_dep_dag(wiumf)
-    return topo_sort(dag)
+    libs = topo_sort(dag).copy()
+    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
+    if not os.path.exists(woumf):
+        sys.exit(woumf + " does not exist")
+    for lib in topo_sort(get_dep_dag(woumf)):
+        if lib not in libs:
+            libs.append(lib)
+    return libs
+
+
+def sync() -> list:
+    print("sync libraries with bin folder")
+    libs = collect()
+    julia_dir = get_julia_libdir()
+    for lib in libs:
+        target = os.path.join(PROJECT_ROOT, "bin", lib)
+        if os.path.exists(target):
+            print("bin/%s exists" % lib)
+            continue
+        source = os.path.join(julia_dir, lib)
+        if not os.path.exists(source):
+            print("ERROR: %s does not exist" % source)
+            continue
+        shutil.copyfile(source, target)
+        print("copied bin/%s" % lib)
+
+
+def dist() -> list:
+    print("create the distribution package")
+    sync()
+
+    shutil.rmtree("dist", ignore_errors=True)
+    now = datetime.datetime.now()
+    suffix = "_%s_%d-%02d-%02d" % (get_os(), now.year, now.month, now.day)
+
+    # with umfpack
+    zip_file = os.path.join("dist", "olcar_withumf" + suffix)
+    print("create package " + zip_file)
+    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    libs = topo_sort(get_dep_dag(wiumf))
+    os.makedirs("dist/wi_umfpack")
+    for lib in libs:
+        shutil.copyfile(os.path.join("bin", lib),
+                        os.path.join("dist", "wi_umfpack", lib))
+    shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
+
+    # without umfpack
+    zip_file = os.path.join("dist", "olcar" + suffix)
+    print("create package " + zip_file)
+    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
+    libs = topo_sort(get_dep_dag(woumf))
+    os.makedirs("dist/wo_umfpack")
+    for lib in libs:
+        shutil.copyfile(os.path.join("bin", lib),
+                        os.path.join("dist", "wo_umfpack", lib))
+    shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
 
 
 def main():
@@ -196,6 +253,10 @@ def main():
         viz()
     elif cmd == "collect":
         print(collect())
+    elif cmd == "sync":
+        sync()
+    elif cmd == "dist":
+        dist()
 
 
 if __name__ == '__main__':

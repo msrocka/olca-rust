@@ -1,5 +1,6 @@
 /target/
 /bin/
+/dist/
 
 .idea/
 .vscode/
