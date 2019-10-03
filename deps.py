@@ -94,14 +94,29 @@ def get_deps(lib_file: str, libs: list) -> list:
         out = proc.stderr.decode(sys.stderr.encoding)
     if out is None:
         return []
-    deps = []
+    deps = set()
     for line in out.splitlines():
         for lib in libs:
             if lib in lib_file:
                 continue
-            if lib in line:
-                deps.append(lib)
-    return deps
+            if lib not in line:
+                continue
+            # make sure that the name of the
+            # library is not a part of another
+            # library name that is also contained
+            # in the line (e.g. `libcamd.so` and
+            # `libcamd.so.2`)
+            dep = lib
+            for other in libs:
+                if other == dep:
+                    continue
+                if dep not in other:
+                    continue
+                if other not in line:
+                    continue
+                dep = other
+            deps.add(dep)
+    return list(deps)
 
 
 def get_dep_dag(entry: str) -> Node:
