@@ -291,6 +291,14 @@ def java():
     print("  }")
     print("}")
 
+
+def clean():
+    shutil.rmtree("./bin", ignore_errors=True)
+    os.mkdir("./bin")
+    shutil.rmtree("./dist")
+    os.mkdir("./dist")
+
+
 def main():
     args = sys.argv
     if len(args) < 2:
@@ -307,6 +315,8 @@ def main():
         dist()
     elif cmd == "java":
         java()
+    elif cmd == "clean":
+        clean()
 
 
 if __name__ == '__main__':
