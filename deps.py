@@ -262,6 +262,7 @@ def dist() -> list:
     for lib in libs:
         shutil.copyfile(os.path.join("bin", lib),
                         os.path.join("dist", "wi_umfpack", lib))
+    shutil.copyfile("LICENSE.md", "dist/wi_umfpack/LICENSE.md")
     shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
 
     # without umfpack
@@ -273,6 +274,7 @@ def dist() -> list:
     for lib in libs:
         shutil.copyfile(os.path.join("bin", lib),
                         os.path.join("dist", "wo_umfpack", lib))
+    shutil.copyfile("LICENSE.md", "dist/wo_umfpack/LICENSE.md")
     shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
 
 
