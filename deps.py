@@ -52,6 +52,7 @@ def as_lib(name: str) -> str:
 
 
 def get_julia_libdir():
+    """Read the Julia library path from the config file. """
     _os = get_os()
     libdir = None
     config = os.path.join(PROJECT_ROOT, "config")
@@ -69,6 +70,15 @@ def get_julia_libdir():
     if libdir is None:
         sys.exit("could not read Julia lib folder for OS=%s from config" % _os)
     return libdir
+
+
+def get_version():
+    """Read the version of the library from the Cargo.toml file."""
+    with open("Cargo.toml", "r", encoding="utf-8") as f:
+        for line in f.readlines():
+            if not line.startswith("version"):
+                continue
+            return line.split("=")[1].strip().strip("\"")
 
 
 def get_deps(lib_file: str, libs: list) -> list:
@@ -120,6 +130,7 @@ def get_deps(lib_file: str, libs: list) -> list:
 
 
 def get_dep_dag(entry: str) -> Node:
+    """Create the directed acyclic graph (DAG) of the dependencies. """
     libdir = get_julia_libdir()
     libs = os.listdir(libdir)
     handled = set()
@@ -138,6 +149,8 @@ def get_dep_dag(entry: str) -> Node:
 
 
 def topo_sort(dag: Node) -> list:
+    """Creates a topological order of the nodes dependency DAG in increasing
+       dependency order."""
     in_degrees = {}
     dependents = {}
     queue = [dag]
@@ -237,7 +250,8 @@ def dist() -> list:
 
     shutil.rmtree("dist", ignore_errors=True)
     now = datetime.datetime.now()
-    suffix = "_%s_%d-%02d-%02d" % (get_os(), now.year, now.month, now.day)
+    suffix = "_%s_%s_%d-%02d-%02d" % (
+        get_version(), get_os(), now.year, now.month, now.day)
 
     # with umfpack
     zip_file = os.path.join("dist", "olcar_withumf" + suffix)
@@ -270,7 +284,7 @@ def java():
         _os = "OS.MAC"
     elif _os == OS_WINDOWS:
         _os = "OS.WINDOWS"
- 
+
     wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
     libs = topo_sort(get_dep_dag(wiumf))
 
