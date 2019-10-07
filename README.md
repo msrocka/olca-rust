@@ -63,5 +63,19 @@ the interface of the [openLCA modules](https://github.com/GreenDelta/olca-module
 If the openLCA modules are installed, you can run the test suite via:
 
 ```bash
-mvn -f java/pom.xml test
+mvn -f java/pom.xml test -Dolca.libdir=../bin
+```
+
+With the `-Dolca.libdir` parameter you can pass the library folder into the
+test suite, e.g. to test the library without UMFPACK bindings:
+
+```bash
+mvn -f java/pom.xml test -Dolca.libdir=../dist/wo_umfpack
+```
+
+This should log something like:
+
+```
+...
+... Math libraries loaded without UMFPACK support.
 ```

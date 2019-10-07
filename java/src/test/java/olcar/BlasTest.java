@@ -3,8 +3,6 @@ package olcar;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openlca.core.matrix.format.DenseMatrix;
@@ -16,7 +14,7 @@ public class BlasTest {
 
 	@BeforeClass
 	public static void setup() {
-		Julia.loadFromDir(new File(Tests.libDir));
+		Julia.loadFromDir(Tests.getLibDir());
 	}
 
 	@Test

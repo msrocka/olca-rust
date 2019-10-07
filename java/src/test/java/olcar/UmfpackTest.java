@@ -3,8 +3,6 @@ package olcar;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assume.assumeTrue;
 
-import java.io.File;
-
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,7 +16,7 @@ public class UmfpackTest {
 
 	@BeforeClass
 	public static void setup() {
-		Julia.loadFromDir(new File(Tests.libDir));
+		Julia.loadFromDir(Tests.getLibDir());
 	}
 
 	@Test

@@ -3,8 +3,6 @@ package olcar;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openlca.julia.Julia;
@@ -13,7 +11,7 @@ public class LapackTest {
 
 	@BeforeClass
 	public static void setup() {
-		Julia.loadFromDir(new File(Tests.libDir));
+		Julia.loadFromDir(Tests.getLibDir());
 	}
 
 	@Test
