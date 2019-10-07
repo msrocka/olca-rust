@@ -295,7 +295,7 @@ def java():
 def clean():
     shutil.rmtree("./bin", ignore_errors=True)
     os.mkdir("./bin")
-    shutil.rmtree("./dist")
+    shutil.rmtree("./dist", ignore_errors=True)
     os.mkdir("./dist")
 
 

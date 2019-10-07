@@ -1,134 +1,67 @@
 # olca-rust
-`olca-rust` is an experimental project the provides 
-[JNI bindings](https://en.wikipedia.org/wiki/Java_Native_Interface) for the
-native math libraries that are used in [openLCA](https://github.com/GreenDelta/olca-app)
-where the glue code is written in [Rust](https://www.rust-lang.org/). If this
-works well on Windows, macOS, and Linux we may merge this into the
-[openLCA core](https://github.com/GreenDelta/olca-modules) to call into native
-code.
-
-We currently link dynamically to [OpenBLAS](https://github.com/xianyi/OpenBLAS)
-and [UMFPACK](https://github.com/PetterS/SuiteSparse) and we take pre-compiled
-versions of these libraries for the respective platforms directly from the
-[Julia](https://julialang.org/) distribution packages.
-
-Calling functions into these libraries via JNI is not fun but Rust can make life
-a lot easier here as it supports among others the following things:
-
-* a [standard project layout](https://doc.rust-lang.org/cargo/guide/project-layout.html)
-  with [modern tools](https://www.rust-lang.org/tools) that work exactly the
-  same on all platforms
-* [conditional compilation](https://doc.rust-lang.org/reference/conditional-compilation.html): 
-  we configure links to platform specific libraries and symbols (function names)
-  directly in the code
-* [modules](https://doc.rust-lang.org/beta/book/ch07-02-modules-and-use-to-control-scope-and-privacy.html):
-  we can hide the details behind a platform independent API in a module
-* [documentation tool](https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html):
-  just run `cargo doc` or `cargo doc --document-private-items --no-deps`
-
-
-## Project layout
-This project is a standard Cargo package. It expects to find the native
-libraries (see below) in the `bin` folder of this project. There is a build
-script (`build.bat` for Windows and `build.sh` for Linux and macOS) which
-creates the libraries with the JNI bindings (`olcar.{dll|so|dylib}` with BLAS
-& LAPACK bindings; `olcar_withumf.{dll|so|dylib}` with additional UMFPACK
-bindings). The `java` folder contains a Maven project that tests the JNI
-bindings against the interface of the
-[openLCA modules](https://github.com/GreenDelta/olca-modules). Finally, there
-is a script `scripts/dist.py` that creates the distribution packages for
-openLCA.
-
-```bash
-cd olca-rust
-# copy the native libraries into the `bin` folder
-./build.sh               # build the JNI bindings
-mvn -f java/pom.xml test # run the tests
-python scripts/dist.py   # create the distribution packages
-```
-
-## Libraries
-As said above, we directly take the compiled libraries from the respective
-[Julia](https://julialang.org/) distribution packages.
 
 ![](./deps.png)
 
-### Windows
-On Windows you can use [Dependency Walker](http://www.dependencywalker.com/) to
-analyze the library dependencies. The following lists the library dependencies
+`olca-rust` provides [JNI bindings](https://en.wikipedia.org/wiki/Java_Native_Interface)
+for high performance math libraries that are used in
+[openLCA](https://github.com/GreenDelta/olca-app) where the glue code is written
+in [Rust](https://www.rust-lang.org/). Currently, we support calls into
+[OpenBLAS](https://github.com/xianyi/OpenBLAS) and [UMFPACK](https://github.com/PetterS/SuiteSparse)
+and we take pre-compiled versions of these libraries for the respective platforms
+directly from the [Julia](https://julialang.org/) distribution packages.
 
-```
-# OpenBLAS
--> libopenblas64_.dll
- -> libgfortran-3.dll
-  -> libquadmath-0.dll
-   -> libgcc_s_seh-1.dll
-    -> libwinpthread-1.dll
+## Building from source
+In order to build the JNI bindings, you need to have a Rust toolchain (with
+`ructc`, `cargo`, and a platform specific linker) installed. The respective
+platform entry in the `config` file needs to point to a folder where the OpenBLAS
+and UMFPACK libraries including all dependencies can be found (typically, we use
+the library folder of a Julia installation for this). This project contains a
+`build.bat` script for Windows and a `build.sh` script for Linux and macOS for
+running the build on these platforms.
 
-# UMFPACK
--> libumfpack.dll
- -> libcholmod.dll
-  -> libccolamd.dll 
-   -> libcolamd.dll
-    -> libcamd.dll
-     -> libamd.dll
-      -> libsuitesparseconfig.dll
-       + OpenBLAS
-```
-
-On Windows, we also need to [generate a lib-file](https://stackoverflow.com/a/16127548/599575)
+On Windows, the build script first [generates lib-files](https://stackoverflow.com/a/16127548/599575)
 for each library we want to link against. This is done automatically from the
-definition files in the `windefs` in the `build.bat` script but this requires
-that the `lib` tool from the MSVC 2017 build tools (which are anyhow required
-for the Rust compiler) is in your `PATH` (e.g. something like this:
-`C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64`)
+definition files in the `windefs` folder but it requires that the `lib` tool
+from the MSVC 2017 build tools (which are anyhow required for the Rust compiler)
+is in your `PATH` (e.g. something like this:
+`C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64`).
 
+The build scripts should then generate the libraries (`olcar.{dll|so|dylib}`
+with BLAS & LAPACK bindings and `olcar_withumf.{dll|so|dylib}` with additional
+UMFPACK bindings in the `bin` folder.
 
-### Linux
+## The `deps.py` script
+For managing the dependencies and generating distribution packages, this project
+contains a `deps.py` script that can be executed with Python 3.6+ and takes
+a command as argument:
 
-**todo**
-The folder with the shared libraries needs to be in the `LD_LIBRARY_PATH`. When this
-is the case the tests run, e.g.:
+```bach
+python3 deps.py [command]
+```
+
+The following commands are currently supported:
+
+* `collect`: collects the dependencies and prints them on the console
+* `sync`: copies missing dependencies to the `bin` folder
+* `dist`: generates the distribution packages
+* `java`: generates the Java code for loading the dependencies in
+  the correct order
+* `viz`: prints the dependency graph in dot-format that can be 
+  visualized with tools like Graphviz/Webgraphviz (like the image above)
+* `clean`: deletes the contents of the `bin` and `dist` folders
+
+The `deps.py` script uses the following tools to collect the dependencies:
+
+* Linux: `ldd`
+* macOS: `otool`
+* Windows: the command line version of the [Dependencies](https://github.com/lucasg/Dependencies) tool which needs to
+  be available in the system path
+
+## Running the test suite
+The `java` folder contains a Maven project that tests the JNI bindings against
+the interface of the [openLCA modules](https://github.com/GreenDelta/olca-modules).
+If the openLCA modules are installed, you can run the test suite via:
 
 ```bash
-export LD_LIBRARY_PATH=/path/to/bin/folder
-
-## and then the Maven test works:
-mvn test
-```
-
-see also: https://stackoverflow.com/a/7284911
-
-Eclipse should add the folder with the executable launcher to the `LD_LIBRARY_PATH`:
-https://eclipsesource.com/blogs/2012/08/18/using-shared-libraries-with-eclipse-rcp/
-
-?
-
-### macOS
-On macOS, library dependencies can be inspected with the `otool` command:
-
-```
-otool -L libolcar.dylib
-```
-
-Currently, we have the following dependency tree:
-
-```
-# OpenBLAS
--> libolcar.dylib
-  -> libopenblas64_.dylib
-    -> libgfortran.4.dylib
-      -> libquadmath.0.dylib
-        -> libgcc_s.1.dylib
-
-# OpenBLAS + UMFPACK
--> libolcar_withumf.dylib
-  -> libumfpack.dylib
-    -> libcholmod.dylib
-      -> libccolamd.dylib
-        -> libcolamd.dylib
-          -> libcamd.dylib
-            -> libamd.dylib
-              -> libsuitesparseconfig.dylib
-                + OpenBLAS
+mvn -f java/pom.xml test
 ```
