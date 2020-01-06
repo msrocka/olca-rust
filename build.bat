@@ -1,6 +1,7 @@
 @echo off
 
 rem delete the lib files and resources
+if not exist bin mkdir bin
 del /s /q /f bin\*.lib
 del /s /q /f bin\*.exp
 del /s /q /f bin\*.def

@@ -24,7 +24,7 @@ for each library we want to link against. This is done automatically from the
 definition files in the `windefs` folder but it requires that the `lib` tool
 from the MSVC 2017 build tools (which are anyhow required for the Rust compiler)
 is in your `PATH` (e.g. something like this:
-`C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64`).
+`C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.24.28314\bin\Hostx64\x64`).
 
 The build scripts should then generate the libraries (`olcar.{dll|so|dylib}`
 with BLAS & LAPACK bindings and `olcar_withumf.{dll|so|dylib}` with additional
