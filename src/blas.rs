@@ -16,17 +16,17 @@ extern "C" {
     #[cfg_attr(target_os = "linux", link_name = "dgemv_64_")]
     #[cfg_attr(target_os = "macos", link_name = "dgemv_64_")]
     pub fn dgemv(
-        TRANS: *mut c_char,
-        M: *mut i64,
-        N: *mut i64,
-        ALPHA: *mut f64,
-        A: *mut f64,
-        LDA: *mut i64,
-        X: *mut f64,
-        INCX: *mut i64,
-        BETA: *mut f64,
+        TRANS: *const c_char,
+        M: *const i64,
+        N: *const i64,
+        ALPHA: *const f64,
+        A: *const f64,
+        LDA: *const i64,
+        X: *const f64,
+        INCX: *const i64,
+        BETA: *const f64,
         Y: *mut f64,
-        INCY: *mut i64,
+        INCY: *const i64,
     );
 
     /// [DGEMM](http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html)
@@ -106,5 +106,24 @@ extern "C" {
         WORK: *mut f64,
         LWORK: *mut i64,
         INFO: *mut i64,        
+    );
+
+    /// [DGETRS](http://www.netlib.org/lapack/explore-html/d6/d49/dgetrs_8f.html)
+    /// DGETRS solves a system of linear equations `A * X = B`  or  `A**T * X = B`
+    /// with a general N-by-N matrix A using the LU factorization computed
+    /// by DGETRF.
+    #[cfg_attr(target_os = "windows", link_name = "dgetrs64_")]
+    #[cfg_attr(target_os = "linux", link_name = "dgetrs_64_")]
+    #[cfg_attr(target_os = "macos", link_name = "dgetrs_64_")]
+    pub fn dgetrs(
+        TRANS: *const c_char,
+        N: *const i64,
+        NRHS: *const i64,
+        A: *const f64,
+        LDA: *const i64,
+        IPIV: *const i64,
+        B: *mut f64,
+        LDB: *const i64,
+        INFO: *mut i64,
     );
 }

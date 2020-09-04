@@ -127,25 +127,25 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let xPtr = get_array_f64(env, x);
         let yPtr = get_array_f64(env, y);
 
-        let mut trans = 'N' as c_char;
-        let mut alpha: f64 = 1.0;
-        let mut beta: f64 = 0.0;
-        let mut inc: i64 = 1;
-        let mut rowsA_64: i64 = m as i64;
-        let mut colsA_64: i64 = n as i64;
+        let trans = 'N' as c_char;
+        let alpha: f64 = 1.0;
+        let beta: f64 = 0.0;
+        let inc: i64 = 1;
+        let rowsA_64: i64 = m as i64;
+        let colsA_64: i64 = n as i64;
 
         blas::dgemv(
-            &mut trans,
-            &mut rowsA_64,
-            &mut colsA_64,
-            &mut alpha,
+            &trans,
+            &rowsA_64,
+            &colsA_64,
+            &alpha,
             aPtr,
-            &mut rowsA_64,
+            &rowsA_64,
             xPtr,
-            &mut inc,
-            &mut beta,
+            &inc,
+            &beta,
             yPtr,
-            &mut inc);
+            &inc);
 
         release_array_f64(env, A, aPtr);
         release_array_f64(env, x, xPtr);
