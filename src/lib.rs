@@ -212,19 +212,19 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solve(
         let ptrA = get_array_f64(env, A);
         let ptrB = get_array_f64(env, B);
 
-        let mut n_64 = n as i64;
-        let mut nrhs_64 = nrhs as i64;
+        let n_64 = n as i64;
+        let nrhs_64 = nrhs as i64;
         let ipiv = malloc((8 * n) as usize) as *mut i64;
         let mut info: i64 = 0;
 
         blas::dgesv(
-            &mut n_64,
-            &mut nrhs_64,
+            &n_64,
+            &nrhs_64,
             ptrA,
-            &mut n_64,
+            &n_64,
             ipiv,
             ptrB,
-            &mut n_64,
+            &n_64,
             &mut info);
 
         free(ipiv as *mut c_void);

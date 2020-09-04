@@ -67,13 +67,13 @@ extern "C" {
     #[cfg_attr(target_os = "linux", link_name = "dgesv_64_")]
     #[cfg_attr(target_os = "macos", link_name = "dgesv_64_")]
     pub fn dgesv(
-        N: *mut i64,
-        NRHS: *mut i64,
+        N: *const i64,
+        NRHS: *const i64,
         A: *mut f64,
-        LDA: *mut i64,
+        LDA: *const i64,
         IPIV: *mut i64,
         B: *mut f64,
-        LDB: *mut i64,
+        LDB: *const i64,
         INFO: *mut i64,
     );
 
