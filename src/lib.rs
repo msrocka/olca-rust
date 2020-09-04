@@ -1,14 +1,14 @@
 extern crate jni_sys;
 extern crate libc;
 
-use std::ptr;
 use std::ffi::c_void;
+use std::ptr;
 
-use libc::{c_char, malloc, free};
 use jni_sys::*;
+use libc::{c_char, free, malloc};
 
-mod umf;
 mod blas;
+mod umf;
 
 const NULL: *mut u8 = ptr::null_mut();
 
@@ -18,7 +18,11 @@ unsafe fn get_array_f64(env: *mut JNIEnv, array: jdoubleArray) -> *mut f64 {
 }
 
 /// Give the data behind the raw pointer of the given array back to the JVM.
-unsafe fn release_array_f64(env: *mut JNIEnv, array: jdoubleArray, ptr: *mut f64) {
+unsafe fn release_array_f64(
+    env: *mut JNIEnv,
+    array: jdoubleArray,
+    ptr: *mut f64,
+) {
     (**env).ReleaseDoubleArrayElements.unwrap()(env, array, ptr, 0);
 }
 
@@ -48,7 +52,6 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
     result: jdoubleArray,
 ) {
     unsafe {
-
         let columnPointersPtr = get_array_i32(env, columnPointers);
         let rowIndicesPtr = get_array_i32(env, rowIndices);
         let valuesPtr = get_array_f64(env, values);
@@ -105,13 +108,13 @@ pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
 
 /// Performs a dense matrix-vector multiplication of a `m` by `n` matrix `A`
 /// with a vector `x`: `y = A * x`.
-/// 
+///
 /// * `m` - The number of rows of the matrix `A`
 /// * `n` - The number of columns of the matrix `A`
 /// * `A` - The matrix `A` stored in column-major order in an array.
 /// * `x` - The vector `x` as an array of size `n`.
 /// * `y` - The result vector `y` as an initialized array of size `m`.
-/// 
+///
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
@@ -121,7 +124,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
     n: jint,
     A: jdoubleArray,
     x: jdoubleArray,
-    y: jdoubleArray) {
+    y: jdoubleArray,
+) {
     unsafe {
         let aPtr = get_array_f64(env, A);
         let xPtr = get_array_f64(env, x);
@@ -135,17 +139,9 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mvmult(
         let colsA_64: i64 = n as i64;
 
         blas::dgemv(
-            &trans,
-            &rowsA_64,
-            &colsA_64,
-            &alpha,
-            aPtr,
-            &rowsA_64,
-            xPtr,
-            &inc,
-            &beta,
-            yPtr,
-            &inc);
+            &trans, &rowsA_64, &colsA_64, &alpha, aPtr, &rowsA_64, xPtr, &inc,
+            &beta, yPtr, &inc,
+        );
 
         release_array_f64(env, A, aPtr);
         release_array_f64(env, x, xPtr);
@@ -164,7 +160,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mmult(
     k: jint,
     A: jdoubleArray,
     B: jdoubleArray,
-    C: jdoubleArray) {
+    C: jdoubleArray,
+) {
     unsafe {
         let ptrA = get_array_f64(env, A);
         let ptrB = get_array_f64(env, B);
@@ -207,7 +204,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solve(
     n: jint,
     nrhs: jint,
     A: jdoubleArray,
-    B: jdoubleArray) -> jint {
+    B: jdoubleArray,
+) -> jint {
     unsafe {
         let ptrA = get_array_f64(env, A);
         let ptrB = get_array_f64(env, B);
@@ -217,15 +215,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solve(
         let ipiv = malloc((8 * n) as usize) as *mut i64;
         let mut info: i64 = 0;
 
-        blas::dgesv(
-            &n_64,
-            &nrhs_64,
-            ptrA,
-            &n_64,
-            ipiv,
-            ptrB,
-            &n_64,
-            &mut info);
+        blas::dgesv(&n_64, &nrhs_64, ptrA, &n_64, ipiv, ptrB, &n_64, &mut info);
 
         free(ipiv as *mut c_void);
         release_array_f64(env, A, ptrA);
@@ -241,7 +231,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_invert(
     env: *mut JNIEnv,
     _class: jclass,
     n: jint,
-    A: jdoubleArray) -> jint {
+    A: jdoubleArray,
+) -> jint {
     unsafe {
         let mut n_64 = n as i64;
         let ptrA = get_array_f64(env, A);
@@ -249,14 +240,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_invert(
         let mut info: i64 = 0;
 
         // calculate the factorization
-        blas::dgetrf(
-            &mut n_64,
-            &mut n_64,
-            ptrA,
-            &mut n_64,
-            ipiv,
-            &mut info);
-
+        blas::dgetrf(&n_64, &n_64, ptrA, &n_64, ipiv, &mut info);
 
         if info != 0 {
             // factorization error
@@ -270,13 +254,8 @@ pub extern "system" fn Java_org_openlca_julia_Julia_invert(
 
         // invert it
         blas::dgetri(
-            &mut n_64,
-            ptrA,
-            &mut n_64,
-            ipiv,
-            work,
-            &mut lwork,
-            &mut info);
+            &mut n_64, ptrA, &mut n_64, ipiv, work, &mut lwork, &mut info,
+        );
 
         free(ipiv as *mut c_void);
         free(work as *mut c_void);

@@ -84,10 +84,10 @@ extern "C" {
     #[cfg_attr(target_os = "linux", link_name = "dgetrf_64_")]
     #[cfg_attr(target_os = "macos", link_name = "dgetrf_64_")]
     pub fn dgetrf(
-        M: *mut i64,
-        N: *mut i64,
+        M: *const i64,
+        N: *const i64,
         A: *mut f64,
-        LDA: *mut i64,
+        LDA: *const i64,
         IPIV: *mut i64,
         INFO: *mut i64,
     );
@@ -105,7 +105,7 @@ extern "C" {
         IPIV: *mut i64,
         WORK: *mut f64,
         LWORK: *mut i64,
-        INFO: *mut i64,        
+        INFO: *mut i64,
     );
 
     /// [DGETRS](http://www.netlib.org/lapack/explore-html/d6/d49/dgetrs_8f.html)
