@@ -5,7 +5,7 @@ use std::ffi::c_void;
 use std::ptr;
 
 use jni_sys::*;
-use libc::{c_char, free, malloc};
+use libc::{c_char, free, malloc, memcpy};
 
 mod blas;
 mod umf;
@@ -263,4 +263,124 @@ pub extern "system" fn Java_org_openlca_julia_Julia_invert(
 
         return info as jint;
     }
+}
+
+struct DenseFactorization {
+    n: i64,
+    matrix: *mut f64,
+    pivot_indices: *mut i64,
+}
+
+impl Drop for DenseFactorization {
+    fn drop(&mut self) {
+        unsafe {
+            free(self.matrix as *mut c_void);
+            free(self.pivot_indices as *mut c_void);
+        }
+    }
+}
+
+/// Computes the LU factorization of the given dense matrix. The given matrix
+/// is not modified. This function returns a pointer to the calculated
+/// factorization.
+#[no_mangle]
+pub extern "C" fn create_dense_factorization(
+    n: i64,
+    matrix: *const f64,
+) -> i64 {
+    unsafe {
+        let byte_count = (n * n * 8) as usize;
+        let factorization = malloc(byte_count) as *mut f64;
+        memcpy(
+            factorization as *mut c_void,
+            matrix as *const c_void,
+            byte_count,
+        );
+        let pivot_indices = malloc((8 * n) as usize) as *mut i64;
+        let mut info = 0i64;
+        blas::dgetrf(&n, &n, factorization, &n, pivot_indices, &mut info);
+
+        let ptr = Box::into_raw(Box::new(DenseFactorization {
+            n,
+            matrix: factorization,
+            pivot_indices,
+        }));
+        return ptr as i64;
+    }
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_createDenseFactorization(
+    env: *mut JNIEnv,
+    __class: jclass,
+    n: jint,
+    matrix: jdoubleArray,
+) -> jlong {
+    unsafe {
+        let matrix_ptr = get_array_f64(env, matrix);
+        let factorization_ptr =
+            create_dense_factorization(n as i64, matrix_ptr);
+        release_array_f64(env, matrix, matrix_ptr);
+        return factorization_ptr;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn solve_dense_factorization(
+    factorization: i64,
+    columns: i64,
+    b: *mut f64,
+) {
+    unsafe {
+        let f = factorization as *const DenseFactorization;
+        let n = (*f).n;
+        let mut info: i64 = 0;
+        blas::dgetrs(
+            &('N' as c_char),
+            &n,
+            &columns,
+            (*f).matrix,
+            &n,
+            (*f).pivot_indices,
+            b,
+            &n,
+            &mut info,
+        );
+    }
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_solveDenseFactorization(
+    env: *mut JNIEnv,
+    __class: jclass,
+    factorization: jlong,
+    columns: jint,
+    b: jdoubleArray,
+) {
+    unsafe {
+        let b_ptr = get_array_f64(env, b);
+        solve_dense_factorization(factorization, columns as i64, b_ptr);
+        release_array_f64(env, b, b_ptr);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn destroy_dense_factorization(ptr: i64) {
+    unsafe {
+        let p = ptr as *mut DenseFactorization;
+        let f = Box::from_raw(p);
+        drop(f);
+    }
+}
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_destroyDenseFactorization(
+    _env: *mut JNIEnv,
+    __class: jclass,
+    factorization: jlong,
+) {
+    destroy_dense_factorization(factorization);
 }
