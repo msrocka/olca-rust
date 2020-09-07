@@ -38,74 +38,6 @@ unsafe fn release_array_i32(env: *mut JNIEnv, array: jintArray, ptr: *mut i32) {
     (**env).ReleaseIntArrayElements.unwrap()(env, array, ptr, 0);
 }
 
-#[no_mangle]
-#[cfg(umfpack)]
-#[allow(non_snake_case)]
-pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
-    env: *mut JNIEnv,
-    _class: jclass,
-    n: jint,
-    columnPointers: jintArray,
-    rowIndices: jintArray,
-    values: jdoubleArray,
-    demand: jdoubleArray,
-    result: jdoubleArray,
-) {
-    unsafe {
-        let columnPointersPtr = get_array_i32(env, columnPointers);
-        let rowIndicesPtr = get_array_i32(env, rowIndices);
-        let valuesPtr = get_array_f64(env, values);
-        let demandPtr = get_array_f64(env, demand);
-        let resultPtr = get_array_f64(env, result);
-
-        let nullF64 = NULL as *mut f64;
-        let mut Symbolic: *mut c_void = ptr::null_mut();
-        let mut Numeric: *mut c_void = ptr::null_mut();
-
-        umf::umfpack_di_symbolic(
-            n,
-            n,
-            columnPointersPtr,
-            rowIndicesPtr,
-            valuesPtr,
-            &mut Symbolic,
-            nullF64,
-            nullF64,
-        );
-
-        umf::umfpack_di_numeric(
-            columnPointersPtr,
-            rowIndicesPtr,
-            valuesPtr,
-            Symbolic,
-            &mut Numeric,
-            nullF64,
-            nullF64,
-        );
-
-        umf::umfpack_di_free_symbolic(&mut Symbolic);
-
-        umf::umfpack_di_solve(
-            0,
-            columnPointersPtr,
-            rowIndicesPtr,
-            valuesPtr,
-            resultPtr,
-            demandPtr,
-            Numeric,
-            nullF64,
-            nullF64,
-        );
-        umf::umfpack_di_free_numeric(&mut Numeric);
-
-        release_array_i32(env, columnPointers, columnPointersPtr);
-        release_array_i32(env, rowIndices, rowIndicesPtr);
-        release_array_f64(env, values, valuesPtr);
-        release_array_f64(env, demand, demandPtr);
-        release_array_f64(env, result, resultPtr);
-    }
-}
-
 /// Performs a dense matrix-vector multiplication of a `m` by `n` matrix `A`
 /// with a vector `x`: `y = A * x`.
 ///
@@ -383,4 +315,120 @@ pub extern "system" fn Java_org_openlca_julia_Julia_destroyDenseFactorization(
     factorization: jlong,
 ) {
     destroy_dense_factorization(factorization);
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
+pub extern "C" fn solve_sparse(
+    n: i32,
+    column_pointers: *const i32,
+    row_indices: *const i32,
+    values: *const f64,
+    b: *const f64,
+    x: *mut f64,
+) {
+    unsafe {
+        let mut symbolic = ptr::null_mut();
+        let mut numeric = ptr::null_mut();
+        let null = ptr::null_mut() as *mut f64;
+
+        umf::umfpack_di_symbolic(
+            n,
+            n,
+            column_pointers,
+            row_indices,
+            values,
+            &mut symbolic,
+            null,
+            null,
+        );
+
+        umf::umfpack_di_numeric(
+            column_pointers,
+            row_indices,
+            values,
+            symbolic,
+            &mut numeric,
+            null,
+            null,
+        );
+
+        umf::umfpack_di_free_symbolic(&mut symbolic);
+
+        umf::umfpack_di_solve(
+            0,
+            column_pointers,
+            row_indices,
+            values,
+            x,
+            b,
+            numeric,
+            null,
+            null,
+        );
+        umf::umfpack_di_free_numeric(&mut numeric);
+    }
+}
+
+#[deprecated = "Use *solveSparse instead"]
+#[no_mangle]
+#[cfg(umfpack)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_umfSolve(
+    env: *mut JNIEnv,
+    class: jclass,
+    n: jint,
+    column_pointers: jintArray,
+    row_indices: jintArray,
+    values: jdoubleArray,
+    b: jdoubleArray,
+    x: jdoubleArray,
+) {
+    Java_org_openlca_julia_Julia_solveSparse(
+        env,
+        class,
+        n,
+        column_pointers,
+        row_indices,
+        values,
+        b,
+        x,
+    );
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_solveSparse(
+    env: *mut JNIEnv,
+    _class: jclass,
+    n: jint,
+    column_pointers: jintArray,
+    row_indices: jintArray,
+    values: jdoubleArray,
+    b: jdoubleArray,
+    x: jdoubleArray,
+) {
+    unsafe {
+        let column_pointers_ptr = get_array_i32(env, column_pointers);
+        let row_indices_ptr = get_array_i32(env, row_indices);
+        let values_ptr = get_array_f64(env, values);
+        let b_ptr = get_array_f64(env, b);
+        let x_ptr = get_array_f64(env, x);
+
+        solve_sparse(
+            n,
+            column_pointers_ptr,
+            row_indices_ptr,
+            values_ptr,
+            b_ptr,
+            x_ptr,
+        );
+
+        release_array_i32(env, column_pointers, column_pointers_ptr);
+        release_array_i32(env, row_indices, row_indices_ptr);
+        release_array_f64(env, values, values_ptr);
+        release_array_f64(env, b, b_ptr);
+        release_array_f64(env, x, x_ptr);
+    }
 }
