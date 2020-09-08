@@ -128,6 +128,33 @@ pub extern "system" fn Java_org_openlca_julia_Julia_mmult(
     }
 }
 
+/// Solves a system of linear equations `A * X = B` based on dense matrices.
+///
+/// This function calls the `DGESV` routine of the underlying BLAS library.
+///
+/// * `n`: The number of rows and columns of the square matrix `A`.
+/// * `nrhs`: The number of `right hand sides`, i.e. the number of columns of
+///   matrix `B`.
+/// * `matrix`: On entry, the matrix `A` on the left side of the equation. After
+///   the call, it will contain the LU factorization of `A`.
+/// * `b`: On entry, the right hand side of the equation and after the call, it
+///   will contain the solution `X`.
+#[no_mangle]
+pub extern "C" fn solve_dense(
+    n: i64,
+    nrhs: i64,
+    matrix: *mut f64,
+    b: *mut f64,
+) -> i64 {
+    let mut info: i64 = 0;
+    unsafe {
+        let ipiv = malloc((8 * n) as usize) as *mut i64;
+        blas::dgesv(&n, &nrhs, matrix, &n, ipiv, b, &n, &mut info);
+        free(ipiv as *mut c_void);
+    }
+    return info;
+}
+
 #[no_mangle]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_org_openlca_julia_Julia_solve(
@@ -135,24 +162,15 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solve(
     _class: jclass,
     n: jint,
     nrhs: jint,
-    A: jdoubleArray,
-    B: jdoubleArray,
+    matrix: jdoubleArray,
+    b: jdoubleArray,
 ) -> jint {
     unsafe {
-        let ptrA = get_array_f64(env, A);
-        let ptrB = get_array_f64(env, B);
-
-        let n_64 = n as i64;
-        let nrhs_64 = nrhs as i64;
-        let ipiv = malloc((8 * n) as usize) as *mut i64;
-        let mut info: i64 = 0;
-
-        blas::dgesv(&n_64, &nrhs_64, ptrA, &n_64, ipiv, ptrB, &n_64, &mut info);
-
-        free(ipiv as *mut c_void);
-        release_array_f64(env, A, ptrA);
-        release_array_f64(env, B, ptrB);
-
+        let matrix_ptr = get_array_f64(env, matrix);
+        let b_ptr = get_array_f64(env, b);
+        let info = solve_dense(n as i64, nrhs as i64, matrix_ptr, b_ptr);
+        release_array_f64(env, matrix, matrix_ptr);
+        release_array_f64(env, b, b_ptr);
         return info as jint;
     }
 }
