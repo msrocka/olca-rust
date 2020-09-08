@@ -450,3 +450,90 @@ pub extern "system" fn Java_org_openlca_julia_Julia_solveSparse(
         release_array_f64(env, x, x_ptr);
     }
 }
+
+#[cfg(umfpack)]
+struct SparseFactorization {
+    column_pointers: *mut i32,
+    row_indices: *mut i32,
+    values: *mut f64,
+    numeric: *mut c_void,
+}
+
+#[cfg(umfpack)]
+impl Drop for SparseFactorization {
+    fn drop(&mut self) {
+        unsafe {
+            free(self.column_pointers as *mut c_void);
+            free(self.row_indices as *mut c_void);
+            free(self.values as *mut c_void);
+            umf::umfpack_di_free_numeric(&mut self.numeric);
+        }
+    }
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
+pub extern "C" fn create_sparse_factorization(
+    n: i32,
+    column_pointers: *const i32,
+    row_indices: *const i32,
+    values: *const f64,
+) -> i64 {
+    unsafe {
+        // the column pointers must contain n + 1 values
+        // the last value must contain the number of
+        // non-zero entries
+        let value_count = column_pointers.offset(n as isize) as usize;
+
+        // allocate the factorization and initialize it
+        let mut f = SparseFactorization {
+            column_pointers: malloc(((n + 1) * 4) as usize) as *mut i32,
+            row_indices: malloc(value_count * 4) as *mut i32,
+            values: malloc(value_count * 8) as *mut f64,
+            numeric: ptr::null_mut(),
+        };
+        memcpy(
+            f.column_pointers as *mut c_void,
+            column_pointers as *mut c_void,
+            ((n + 1) * 4) as usize,
+        );
+        memcpy(
+            f.row_indices as *mut c_void,
+            row_indices as *mut c_void,
+            value_count * 4,
+        );
+        memcpy(
+            f.values as *mut c_void,
+            values as *mut c_void,
+            value_count * 8,
+        );
+
+        // calculate the sparse factorization
+        let mut symbolic = ptr::null_mut();
+        let null = ptr::null_mut() as *mut f64;
+        umf::umfpack_di_symbolic(
+            n,
+            n,
+            f.column_pointers,
+            f.row_indices,
+            f.values,
+            &mut symbolic,
+            null,
+            null,
+        );
+        umf::umfpack_di_numeric(
+            f.column_pointers,
+            f.row_indices,
+            values,
+            symbolic,
+            &mut f.numeric,
+            null,
+            null,
+        );
+        umf::umfpack_di_free_symbolic(&mut symbolic);
+
+        // wrap it into a pointer
+        let pointer = Box::into_raw(Box::new(f));
+        return pointer as i64;
+    }
+}
