@@ -463,10 +463,10 @@ struct SparseFactorization {
 impl Drop for SparseFactorization {
     fn drop(&mut self) {
         unsafe {
+            umf::umfpack_di_free_numeric(&mut self.numeric);
             free(self.column_pointers as *mut c_void);
             free(self.row_indices as *mut c_void);
             free(self.values as *mut c_void);
-            umf::umfpack_di_free_numeric(&mut self.numeric);
         }
     }
 }
@@ -475,6 +475,7 @@ impl Drop for SparseFactorization {
 #[cfg(umfpack)]
 pub extern "C" fn create_sparse_factorization(
     n: i32,
+    non_zeros: i32,
     column_pointers: *const i32,
     row_indices: *const i32,
     values: *const f64,
@@ -483,13 +484,13 @@ pub extern "C" fn create_sparse_factorization(
         // the column pointers must contain n + 1 values
         // the last value must contain the number of
         // non-zero entries
-        let value_count = column_pointers.offset(n as isize) as usize;
+        //let value_count = column_pointers.offset(n as isize) as usize;
 
         // allocate the factorization and initialize it
         let mut f = SparseFactorization {
             column_pointers: malloc(((n + 1) * 4) as usize) as *mut i32,
-            row_indices: malloc(value_count * 4) as *mut i32,
-            values: malloc(value_count * 8) as *mut f64,
+            row_indices: malloc((non_zeros * 4) as usize) as *mut i32,
+            values: malloc((non_zeros * 8) as usize) as *mut f64,
             numeric: ptr::null_mut(),
         };
         memcpy(
@@ -500,12 +501,12 @@ pub extern "C" fn create_sparse_factorization(
         memcpy(
             f.row_indices as *mut c_void,
             row_indices as *mut c_void,
-            value_count * 4,
+            (non_zeros * 4) as usize,
         );
         memcpy(
             f.values as *mut c_void,
             values as *mut c_void,
-            value_count * 8,
+            (non_zeros * 8) as usize,
         );
 
         // calculate the sparse factorization
@@ -545,6 +546,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_createSparseFactorization(
     env: *mut JNIEnv,
     _class: jclass,
     n: jint,
+    non_zeros: jint,
     column_pointers: jintArray,
     row_indices: jintArray,
     values: jdoubleArray,
@@ -555,6 +557,7 @@ pub extern "system" fn Java_org_openlca_julia_Julia_createSparseFactorization(
         let values_ptr = get_array_f64(env, values);
         let pointer = create_sparse_factorization(
             n,
+            non_zeros,
             column_pointers_ptr,
             row_indices_ptr,
             values_ptr,
