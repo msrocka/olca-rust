@@ -537,3 +537,38 @@ pub extern "C" fn create_sparse_factorization(
         return pointer as i64;
     }
 }
+
+#[no_mangle]
+#[cfg(umfpack)]
+pub extern "C" fn solve_sparse_factorization(
+    factorization: i64,
+    b: *const f64,
+    x: *mut f64,
+) {
+    unsafe {
+        let ptr = factorization as *mut SparseFactorization;
+        let f = Box::from_raw(ptr);
+        let null = ptr::null_mut() as *mut f64;
+        umf::umfpack_di_solve(
+            0,
+            f.column_pointers,
+            f.row_indices,
+            f.values,
+            x,
+            b,
+            f.numeric,
+            null,
+            null,
+        );
+    }
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
+pub extern "C" fn destroy_sparse_factorization(ptr: i64) {
+    unsafe {
+        let p = ptr as *mut SparseFactorization;
+        let f = Box::from_raw(p);
+        drop(f);
+    }
+}
