@@ -540,6 +540,34 @@ pub extern "C" fn create_sparse_factorization(
 
 #[no_mangle]
 #[cfg(umfpack)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_createSparseFactorization(
+    env: *mut JNIEnv,
+    _class: jclass,
+    n: jint,
+    column_pointers: jintArray,
+    row_indices: jintArray,
+    values: jdoubleArray,
+) -> jlong {
+    unsafe {
+        let column_pointers_ptr = get_array_i32(env, column_pointers);
+        let row_indices_ptr = get_array_i32(env, row_indices);
+        let values_ptr = get_array_f64(env, values);
+        let pointer = create_sparse_factorization(
+            n,
+            column_pointers_ptr,
+            row_indices_ptr,
+            values_ptr,
+        );
+        release_array_i32(env, column_pointers, column_pointers_ptr);
+        release_array_i32(env, row_indices, row_indices_ptr);
+        release_array_f64(env, values, values_ptr);
+        return pointer;
+    }
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
 pub extern "C" fn solve_sparse_factorization(
     factorization: i64,
     b: *const f64,
@@ -565,10 +593,40 @@ pub extern "C" fn solve_sparse_factorization(
 
 #[no_mangle]
 #[cfg(umfpack)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_solveSparseFactorization(
+    env: *mut JNIEnv,
+    _class: jclass,
+    factorization: jlong,
+    b: jdoubleArray,
+    x: jdoubleArray,
+) {
+    unsafe {
+        let b_ptr = get_array_f64(env, b);
+        let x_ptr = get_array_f64(env, x);
+        solve_sparse_factorization(factorization, b_ptr, x_ptr);
+        release_array_f64(env, b, b_ptr);
+        release_array_f64(env, x, x_ptr);
+    }
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
 pub extern "C" fn destroy_sparse_factorization(ptr: i64) {
     unsafe {
         let p = ptr as *mut SparseFactorization;
         let f = Box::from_raw(p);
         drop(f);
     }
+}
+
+#[no_mangle]
+#[cfg(umfpack)]
+#[allow(non_snake_case)]
+pub extern "system" fn Java_org_openlca_julia_Julia_destroySparseFactorization(
+    _env: *mut JNIEnv,
+    _class: jclass,
+    factorization: jlong,
+) {
+    destroy_sparse_factorization(factorization);
 }
