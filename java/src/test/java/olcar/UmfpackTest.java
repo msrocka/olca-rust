@@ -64,6 +64,6 @@ public class UmfpackTest {
 		double[] x = factorization.solve(b);
 		assertArrayEquals(
 				new double[] { 1d, 2d, 3d, 4d, 5d }, x, 1e-8);
-		factorization.dispose();
+		//factorization.dispose();
 	}
 }

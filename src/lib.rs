@@ -463,7 +463,8 @@ struct SparseFactorization {
 impl Drop for SparseFactorization {
     fn drop(&mut self) {
         unsafe {
-            umf::umfpack_di_free_numeric(&mut self.numeric);
+            let numeric_ptr: *mut *mut c_void = &mut (*self).numeric;
+            umf::umfpack_di_free_numeric(numeric_ptr);
             free(self.column_pointers as *mut c_void);
             free(self.row_indices as *mut c_void);
             free(self.values as *mut c_void);
@@ -524,7 +525,7 @@ pub extern "C" fn create_sparse_factorization(
         umf::umfpack_di_numeric(
             f.column_pointers,
             f.row_indices,
-            values,
+            f.values,
             symbolic,
             &mut f.numeric,
             null,
