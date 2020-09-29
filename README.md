@@ -11,6 +11,7 @@ and we take pre-compiled versions of these libraries for the respective platform
 directly from the [Julia](https://julialang.org/) distribution packages.
 
 ## Building from source
+
 In order to build the JNI bindings, you need to have a Rust toolchain (with
 `ructc`, `cargo`, and a platform specific linker) installed. The respective
 platform entry in the `config` file needs to point to a folder where the OpenBLAS
@@ -31,6 +32,7 @@ with BLAS & LAPACK bindings and `olcar_withumf.{dll|so|dylib}` with additional
 UMFPACK bindings in the `bin` folder.
 
 ## The `deps.py` script
+
 For managing the dependencies and generating distribution packages, this project
 contains a `deps.py` script that can be executed with Python 3.6+ and takes
 a command as argument:
@@ -58,6 +60,7 @@ The `deps.py` script uses the following tools to collect the dependencies:
   be available in the system path
 
 ## Running the test suite
+
 The `java` folder contains a Maven project that tests the JNI bindings against
 the interface of the [openLCA modules](https://github.com/GreenDelta/olca-modules).
 If the openLCA modules are installed, you can run the test suite via:
