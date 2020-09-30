@@ -20,7 +20,7 @@ public class SparseFactorizationTest {
 
 	@Test
 	public void testDispose() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		var hashPoints = new HashPointMatrix(5, 5);
 		for (int i = 0; i < 5; i++) {
 			hashPoints.set(i, i, 1.0);
@@ -32,7 +32,7 @@ public class SparseFactorizationTest {
 
 	@Test
 	public void testSingleSolution() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		var m = new HashPointMatrix(new double[][] {
 				{ 2.0, 3.0, 0.0, 0.0, 0.0 },
 				{ 3.0, 0.0, 4.0, 0.0, 6.0 },
@@ -51,7 +51,7 @@ public class SparseFactorizationTest {
 
 	@Test
 	public void testIdentity() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		var hashPoints = new HashPointMatrix(100, 100);
 		for (int i = 0; i < 100; i++) {
 			hashPoints.set(i, i, 1.0);

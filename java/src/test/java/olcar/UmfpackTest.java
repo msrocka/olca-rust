@@ -20,7 +20,7 @@ public class UmfpackTest {
 
 	@Test
 	public void testSolveNative() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		double[] x = new double[5];
 		Julia.umfSolve(5,
 				new int[] { 0, 2, 5, 9, 10, 12 },
@@ -35,7 +35,7 @@ public class UmfpackTest {
 
 	@Test
 	public void testSolveMatrix() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		HashPointMatrix m = new HashPointMatrix(new double[][] {
 				{ 2.0, 3.0, 0.0, 0.0, 0.0 },
 				{ 3.0, 0.0, 4.0, 0.0, 6.0 },
@@ -51,7 +51,7 @@ public class UmfpackTest {
 
 	@Test
 	public void testFactorizeMatrix() {
-		assumeTrue(Julia.isWithUmfpack());
+		assumeTrue(Julia.hasSparseLibraries());
 		var m = new HashPointMatrix(new double[][] {
 				{ 2.0, 3.0, 0.0, 0.0, 0.0 },
 				{ 3.0, 0.0, 4.0, 0.0, 6.0 },
