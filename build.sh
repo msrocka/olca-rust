@@ -5,7 +5,7 @@ mkdir -p bin
 
 # 1.) build the version with UMFPACK bindings: libolcar_withumf
 cargo clean
-export RUSTFLAGS="--cfg umfpack -C target-feature=+crt-static"
+export RUSTFLAGS="--cfg umfpack -C target-feature=-crt-static"
 cargo build --release
 LIB=./target/release/libolcar
 DIST=libolcar_withumf
@@ -22,7 +22,7 @@ cp $LIB "./bin/$DIST"
 
 # 2.) build the version without UMFPACK: libolcar_withumf
 cargo clean
-export RUSTFLAGS="-C target-feature=+crt-static"
+export RUSTFLAGS="-C target-feature=-crt-static"
 cargo build --release
 LIB=./target/release/libolcar
 DIST=libolcar
