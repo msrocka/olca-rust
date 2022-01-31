@@ -9,11 +9,10 @@ static OS: &str = "windows";
 
 fn main() {
 
-    // when we compile the library we link against the
-    // math libraries provided by the Julia distribution.
-    // we read the path of the library folder from the
-    // config.toml file. if we cannot find it, we take
-    // the ./bin folder as library path
+    // When we compile the library, we link against the math libraries provided
+    // by the respective Julia distribution. We read the path of the library
+    // folder from the `config` file in the project root folder. If we cannot
+    // find it, we take the `./bin` folder as library path
 
     if OS == "windows" {
         println!("cargo:rustc-link-search=./bin");
