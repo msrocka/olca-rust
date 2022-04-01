@@ -14,11 +14,11 @@ directly from the [Julia](https://julialang.org/) distribution packages.
 
 In order to build the JNI bindings, you need to have a Rust toolchain (with
 `ructc`, `cargo`, and a platform specific linker) installed. The respective
-platform entry in the `config` file needs to point to a folder where the OpenBLAS
-and UMFPACK libraries including all dependencies can be found (typically, we use
-the library folder of a Julia installation for this). This project contains a
-`build.bat` script for Windows and a `build.sh` script for Linux and macOS for
-running the build on these platforms.
+platform entry in the `config` file needs to point to a folder where the
+OpenBLAS and UMFPACK libraries including all dependencies can be found
+(typically, we use the library folder of a Julia installation for this). This
+project contains a `build.bat` script for Windows and a `build.sh` script for
+Linux and macOS for running the build on these platforms.
 
 On Windows, the build script first [generates lib-files](https://stackoverflow.com/a/16127548/599575)
 for each library we want to link against. This is done automatically from the
@@ -56,29 +56,6 @@ The `deps.py` script uses the following tools to collect the dependencies:
 
 * Linux: `ldd`
 * macOS: `otool`
-* Windows: the command line version of the [Dependencies](https://github.com/lucasg/Dependencies) tool which needs to
+* Windows: the command line version of the 
+  [Dependencies](https://github.com/lucasg/Dependencies) tool which needs to
   be available in the system path
-
-## Running the test suite
-
-The `java` folder contains a Maven project that tests the JNI bindings against
-the interface of the [openLCA modules](https://github.com/GreenDelta/olca-modules).
-If the openLCA modules are installed, you can run the test suite via:
-
-```bash
-mvn -f java/pom.xml test -Dolca.libdir=../bin
-```
-
-With the `-Dolca.libdir` parameter you can pass the library folder into the
-test suite, e.g. to test the library without UMFPACK bindings:
-
-```bash
-mvn -f java/pom.xml test -Dolca.libdir=../dist/wo_umfpack
-```
-
-This should log something like:
-
-```
-...
-... Math libraries loaded without UMFPACK support.
-```
