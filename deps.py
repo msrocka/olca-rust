@@ -6,10 +6,11 @@ import subprocess
 import shutil
 import sys
 
+from pathlib import Path
 from typing import List
 
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = Path(os.path.dirname(os.path.abspath(__file__)))
 
 OS_MACOS = "macos"
 OS_WINDOWS = "windows"
@@ -35,32 +36,27 @@ def get_os() -> str:
     sys.exit("unknown platform: " + ps)
 
 
-def get_lib_ext() -> str:
-    _os = get_os()
-    if _os == OS_LINUX:
-        return ".so"
-    if _os == OS_MACOS:
-        return ".dylib"
-    if _os == OS_WINDOWS:
-        return ".dll"
-    sys.exit("unknown os: " + _os)
-
-
-def as_lib(name: str) -> str:
-    """Get the platform dependent library name."""
+def lib_name_of(name: str) -> str:
+    """Adds the platform specific library extension and prefix to the given 
+       name. """
     _os = get_os()
     prefix = ""
     if _os != OS_WINDOWS:
         if not name.startswith("lib"):
             prefix = "lib"
-    return prefix + name + get_lib_ext()
+    extension = "so"
+    if _os == OS_MACOS:
+        extension = "dylib"
+    elif _os == OS_WINDOWS:
+        extension = "dll"
+    return f'{prefix}{name}.{extension}'
 
 
-def get_julia_libdir():
-    """Read the Julia library path from the config file. """
+def get_julia_libdir() -> Path:
+    """Read the Julia library path from the config file."""
     _os = get_os()
     libdir = None
-    config = os.path.join(PROJECT_ROOT, "config")
+    config = PROJECT_ROOT / "config"
     with open(config, "r", encoding="utf-8") as f:
         libdir_key = _os + "-julia-lib-dir"
         for line in f.readlines():
@@ -73,8 +69,11 @@ def get_julia_libdir():
             libdir = parts[1].strip()
             break
     if libdir is None:
-        sys.exit("could not read Julia lib folder for OS=%s from config" % _os)
-    return libdir
+        sys.exit(f"no Julia lib-folder defined for OS={_os} in config")
+    path = Path(libdir)
+    if not path.exists():
+        sys.exit(f"the defined Julia library folder {path} does not exist")    
+    return path
 
 
 def get_version():
@@ -202,7 +201,7 @@ def topo_sort(dag: Node) -> list:
 
 
 def viz():
-    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
     if not os.path.exists(wiumf):
         sys.exit(wiumf + " does not exist")
     dag = get_dep_dag(wiumf)
@@ -218,12 +217,12 @@ def viz():
 
 def collect() -> list:
     """Collect all dependecies in a list."""
-    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
     if not os.path.exists(wiumf):
         sys.exit(wiumf + " does not exist")
     dag = get_dep_dag(wiumf)
     libs = topo_sort(dag).copy()
-    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
+    woumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar"))
     if not os.path.exists(woumf):
         sys.exit(woumf + " does not exist")
     for lib in topo_sort(get_dep_dag(woumf)):
@@ -261,7 +260,7 @@ def dist() -> list:
     # with umfpack
     zip_file = os.path.join("dist", "olcar_withumf" + suffix)
     print("create package " + zip_file)
-    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
+    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
     libs = topo_sort(get_dep_dag(wiumf))
     os.makedirs("dist/wi_umfpack")
     for lib in libs:
@@ -269,12 +268,12 @@ def dist() -> list:
                         os.path.join("dist", "wi_umfpack", lib))
     shutil.copyfile("LICENSE.md", "dist/wi_umfpack/LICENSE.md")
     write_json_index("dist/wi_umfpack", ["blas", "umfpack"], libs)
-    shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
+    # shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
 
     # without umfpack
     zip_file = os.path.join("dist", "olcar" + suffix)
     print("create package " + zip_file)
-    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
+    woumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar"))
     libs = topo_sort(get_dep_dag(woumf))
     os.makedirs("dist/wo_umfpack")
     for lib in libs:
@@ -282,7 +281,7 @@ def dist() -> list:
                         os.path.join("dist", "wo_umfpack", lib))
     shutil.copyfile("LICENSE.md", "dist/wo_umfpack/LICENSE.md")
     write_json_index("dist/wo_umfpack", ["blas"], libs)
-    shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
+    # shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
 
 
 def write_json_index(folder: str, modules: List[str], libraries: List[str]):

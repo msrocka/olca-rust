@@ -16,9 +16,11 @@ In order to build the JNI bindings, you need to have a Rust toolchain (with
 `ructc`, `cargo`, and a platform specific linker) installed. The respective
 platform entry in the `config` file needs to point to a folder where the
 OpenBLAS and UMFPACK libraries including all dependencies can be found
-(typically, we use the library folder of a Julia installation for this). This
-project contains a `build.bat` script for Windows and a `build.sh` script for
-Linux and macOS for running the build on these platforms.
+(typically, we use the library folder of a Julia installation for this; note
+that the current Julia 1.7 version fails with segfaults in some calculations on
+Linux; the 1.6 version seems to work). This project contains a `build.bat`
+script for Windows and a `build.sh` script for Linux and macOS for running the
+build on these platforms.
 
 On Windows, the build script first [generates lib-files](https://stackoverflow.com/a/16127548/599575)
 for each library we want to link against. This is done automatically from the
