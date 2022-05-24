@@ -7,10 +7,14 @@ import shutil
 import sys
 
 from pathlib import Path
-from typing import List
-
+from typing import Dict, List, Set
 
 PROJECT_ROOT = Path(os.path.dirname(os.path.abspath(__file__)))
+BIN_DIR = PROJECT_ROOT / "bin"
+
+# base names of the compiled libraries
+LIB_BLAS = "olcar"
+LIB_UMFPACK = "olcar_withumf"
 
 OS_MACOS = "macos"
 OS_WINDOWS = "windows"
@@ -18,11 +22,15 @@ OS_LINUX = "linux"
 
 
 class Node:
+    """A node in a library-dependency graph."""
 
-    def __init__(self, path: str, name: str):
+    def __init__(self, path: Path):
         self.path = path
-        self.name = name
-        self.deps = []
+        self.deps: List[Node] = []
+
+    @property
+    def name(self):
+        return self.path.name
 
 
 def get_os() -> str:
@@ -36,7 +44,7 @@ def get_os() -> str:
     sys.exit("unknown platform: " + ps)
 
 
-def lib_name_of(name: str) -> str:
+def libof(name: str) -> Path:
     """Adds the platform specific library extension and prefix to the given 
        name. """
     _os = get_os()
@@ -49,7 +57,11 @@ def lib_name_of(name: str) -> str:
         extension = "dylib"
     elif _os == OS_WINDOWS:
         extension = "dll"
-    return f'{prefix}{name}.{extension}'
+    full_name = f'{prefix}{name}.{extension}'
+    full_path = BIN_DIR / full_name
+    if not full_path.exists():
+        sys.exit(f'{full_path} does not exist')
+    return full_path
 
 
 def get_julia_libdir() -> Path:
@@ -72,28 +84,29 @@ def get_julia_libdir() -> Path:
         sys.exit(f"no Julia lib-folder defined for OS={_os} in config")
     path = Path(libdir)
     if not path.exists():
-        sys.exit(f"the defined Julia library folder {path} does not exist")    
+        sys.exit(f"the defined Julia library folder {path} does not exist")
     return path
 
 
 def get_version():
     """Read the version of the library from the Cargo.toml file."""
-    with open("Cargo.toml", "r", encoding="utf-8") as f:
+    with open(PROJECT_ROOT / "Cargo.toml", "r", encoding="utf-8") as f:
         for line in f.readlines():
             if not line.startswith("version"):
                 continue
             return line.split("=")[1].strip().strip("\"")
 
 
-def get_deps(lib_file: str, libs: list) -> list:
+def get_deps(lib_path: Path, libs: List[str]) -> List[str]:
     _os = get_os()
     cmd = None
+    path_str = str(lib_path.absolute())
     if _os == OS_MACOS:
-        cmd = ["otool", "-L", lib_file]
+        cmd = ["otool", "-L", path_str]
     if _os == OS_WINDOWS:
-        cmd = ["Dependencies.exe", "-imports", lib_file]
+        cmd = ["Dependencies.exe", "-imports", path_str]
     if _os == OS_LINUX:
-        cmd = ["ldd", lib_file]
+        cmd = ["ldd", path_str]
     if cmd is None:
         sys.exit("no deps command for os " + _os)
 
@@ -111,7 +124,7 @@ def get_deps(lib_file: str, libs: list) -> list:
     deps = set()
     for line in out.splitlines():
         for lib in libs:
-            if lib in lib_file:
+            if lib == lib_path.name:
                 continue
             if lib not in line:
                 continue
@@ -133,17 +146,17 @@ def get_deps(lib_file: str, libs: list) -> list:
     return list(deps)
 
 
-def get_dep_dag(entry: str) -> Node:
+def get_dep_dag(root_lib: Path) -> Node:
     """Create the directed acyclic graph (DAG) of the dependencies. """
     libdir = get_julia_libdir()
     libs = os.listdir(libdir)
-    handled = set()
-    root = Node(entry, entry.split(os.path.sep)[-1])
-    queue = [root]
+    handled: Set[str] = set()
+    root = Node(root_lib)
+    queue: List[Node] = [root]
     while len(queue) != 0:
-        n = queue.pop(0)  # type: Node
+        n: Node = queue.pop(0)
         for dep in get_deps(n.path, libs):
-            dep_node = Node(os.path.join(libdir, dep), dep)
+            dep_node = Node(libdir / dep)
             n.deps.append(dep_node)
             if dep in handled:
                 continue
@@ -152,12 +165,14 @@ def get_dep_dag(entry: str) -> Node:
     return root
 
 
-def topo_sort(dag: Node) -> list:
-    """Creates a topological order of the nodes dependency DAG in increasing
+def topo_sort(dag: Node) -> List[str]:
+    """Creates a topological order of the dependency graph in increasing
        dependency order."""
-    in_degrees = {}
-    dependents = {}
-    queue = [dag]
+
+    # create dependency maps
+    in_degrees: Dict[str, int] = {}
+    dependents: Dict[str, List[str]] = {}
+    queue: List[Node] = [dag]
     handled = set()
     while len(queue) != 0:
         n = queue.pop(0)    # type: Node
@@ -195,16 +210,13 @@ def topo_sort(dag: Node) -> list:
         if depl is None:
             continue
         for dependent in depl:
-            in_degrees[dependent] = in_degrees[dependent] - 1
+            in_degrees[dependent] -= 1  # in_degrees[dependent] - 1
 
     return ordered
 
 
 def viz():
-    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
-    if not os.path.exists(wiumf):
-        sys.exit(wiumf + " does not exist")
-    dag = get_dep_dag(wiumf)
+    dag = get_dep_dag(libof(LIB_UMFPACK))
     print("digraph g {")
     queue = [dag]
     while len(queue) != 0:
@@ -215,34 +227,28 @@ def viz():
     print("}")
 
 
-def collect() -> list:
+def collect() -> List[str]:
     """Collect all dependecies in a list."""
-    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
-    if not os.path.exists(wiumf):
-        sys.exit(wiumf + " does not exist")
-    dag = get_dep_dag(wiumf)
+    dag = get_dep_dag(libof(LIB_UMFPACK))
     libs = topo_sort(dag).copy()
-    woumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar"))
-    if not os.path.exists(woumf):
-        sys.exit(woumf + " does not exist")
-    for lib in topo_sort(get_dep_dag(woumf)):
+    for lib in topo_sort(get_dep_dag(libof(LIB_BLAS))):
         if lib not in libs:
             libs.append(lib)
     return libs
 
 
-def sync() -> list:
+def sync():
     print("sync libraries with bin folder")
     libs = collect()
     julia_dir = get_julia_libdir()
     for lib in libs:
-        target = os.path.join(PROJECT_ROOT, "bin", lib)
-        if os.path.exists(target):
+        target = BIN_DIR / lib
+        if target.exists():
             print("bin/%s exists" % lib)
             continue
-        source = os.path.join(julia_dir, lib)
-        if not os.path.exists(source):
-            print("ERROR: %s does not exist" % source)
+        source = julia_dir / lib
+        if not source.exists():
+            print(f"ERROR: {source} does not exist")
             continue
         shutil.copyfile(source, target)
         print("copied bin/%s" % lib)
@@ -252,51 +258,69 @@ def dist() -> list:
     print("create the distribution package")
     sync()
 
-    shutil.rmtree("dist", ignore_errors=True)
+    dist = PROJECT_ROOT / "dist"
+    shutil.rmtree(dist, ignore_errors=True)
     now = datetime.datetime.now()
     suffix = "_%s_%s_%d-%02d-%02d" % (
         get_version(), get_os(), now.year, now.month, now.day)
 
     # with umfpack
-    zip_file = os.path.join("dist", "olcar_withumf" + suffix)
-    print("create package " + zip_file)
-    wiumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar_withumf"))
-    libs = topo_sort(get_dep_dag(wiumf))
-    os.makedirs("dist/wi_umfpack")
-    for lib in libs:
-        shutil.copyfile(os.path.join("bin", lib),
-                        os.path.join("dist", "wi_umfpack", lib))
-    shutil.copyfile("LICENSE.md", "dist/wi_umfpack/LICENSE.md")
-    write_json_index("dist/wi_umfpack", ["blas", "umfpack"], libs)
-    # shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
+    umf_zip = dist / f"olcar_withumf{suffix}"
+    print(f"create package {umf_zip}")
+    umf_libs = topo_sort(get_dep_dag(libof(LIB_UMFPACK)))
+    umfdir = dist / "wi_umfpack"
+    umfdir.mkdir(exist_ok=True, parents=True)
+    for lib in umf_libs:
+        shutil.copyfile(BIN_DIR / lib,
+                        umfdir / lib)
+    shutil.copyfile(PROJECT_ROOT / "LICENSE.md", umfdir / "LICENSE.md")
+    write_json_index(umfdir, ["blas", "umfpack"], umf_libs)
+    shutil.make_archive(umf_zip, "zip", umfdir)
 
     # without umfpack
-    zip_file = os.path.join("dist", "olcar" + suffix)
-    print("create package " + zip_file)
-    woumf = os.path.join(PROJECT_ROOT, "bin", lib_name_of("olcar"))
-    libs = topo_sort(get_dep_dag(woumf))
-    os.makedirs("dist/wo_umfpack")
-    for lib in libs:
-        shutil.copyfile(os.path.join("bin", lib),
-                        os.path.join("dist", "wo_umfpack", lib))
-    shutil.copyfile("LICENSE.md", "dist/wo_umfpack/LICENSE.md")
-    write_json_index("dist/wo_umfpack", ["blas"], libs)
-    # shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
+    blas_zip = dist / f'olcar{suffix}'
+    print(f"create package {blas_zip}")
+    blas_libs = topo_sort(get_dep_dag(libof(LIB_BLAS)))
+    blasdir = dist / "wo_umfpack"
+    blasdir.mkdir(exist_ok=True)
+    for lib in blas_libs:
+        shutil.copyfile(BIN_DIR / lib,
+                        blasdir / lib)
+    shutil.copyfile(PROJECT_ROOT / "LICENSE.md", blasdir / "LICENSE.md")
+    write_json_index(blasdir, ["blas"], blas_libs)
+    shutil.make_archive(blas_zip, "zip", blasdir)
 
 
-def write_json_index(folder: str, modules: List[str], libraries: List[str]):
+def write_json_index(folder: Path, modules: List[str], libraries: List[str]):
     """Writes the `olca-native.json` file into the given folder."""
     obj = {"modules": modules, "libraries": libraries}
-    path = os.path.join(folder, 'olca-native.json')
+    path = folder / 'olca-native.json'
     with open(path, 'w', encoding='utf-8') as out:
         json.dump(obj, out, indent='  ')
 
 
 def clean():
-    shutil.rmtree("./bin", ignore_errors=True)
-    os.mkdir("./bin")
-    shutil.rmtree("./dist", ignore_errors=True)
-    os.mkdir("./dist")
+    if BIN_DIR.exists():
+        print(f'clear libraries in {BIN_DIR}:')
+        blas = libof(LIB_BLAS)
+        umf = libof(LIB_UMFPACK)
+        for f in os.listdir(BIN_DIR):
+            path = BIN_DIR / f
+            if path == blas or path == umf:
+                continue
+            print(f'  delete {path}')
+            os.remove(path)
+
+    dist_dir = PROJECT_ROOT / 'dist'
+    if dist_dir.exists():
+        print(f'clear folder {dist_dir}')
+        shutil.rmtree("./dist", ignore_errors=True)
+        os.mkdir("./dist")
+
+
+def build():
+    ext = "bat" if get_os() == OS_WINDOWS else "sh"
+    os.system(PROJECT_ROOT / f"build.{ext}")
 
 
 def main():
@@ -305,7 +329,9 @@ def main():
         print(collect())
         return
     cmd = args[1]
-    if cmd == "viz":
+    if cmd == "build":
+        build()
+    elif cmd == "viz":
         viz()
     elif cmd == "collect":
         print(collect())
