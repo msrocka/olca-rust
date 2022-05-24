@@ -46,8 +46,6 @@ The following commands are currently supported:
 * `collect`: collects the dependencies and prints them on the console
 * `sync`: copies missing dependencies to the `bin` folder
 * `dist`: generates the distribution packages
-* `java`: generates the Java code for loading the dependencies in
-  the correct order
 * `viz`: prints the dependency graph in dot-format that can be 
   visualized with tools like Graphviz/Webgraphviz (like the image above)
 * `clean`: deletes the contents of the `bin` and `dist` folders

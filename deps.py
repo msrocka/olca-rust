@@ -1,9 +1,13 @@
 import datetime
+import json
 import os
 import platform
 import subprocess
 import shutil
 import sys
+
+from typing import List
+
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -43,6 +47,7 @@ def get_lib_ext() -> str:
 
 
 def as_lib(name: str) -> str:
+    """Get the platform dependent library name."""
     _os = get_os()
     prefix = ""
     if _os != OS_WINDOWS:
@@ -263,6 +268,7 @@ def dist() -> list:
         shutil.copyfile(os.path.join("bin", lib),
                         os.path.join("dist", "wi_umfpack", lib))
     shutil.copyfile("LICENSE.md", "dist/wi_umfpack/LICENSE.md")
+    write_json_index("dist/wi_umfpack", ["blas", "umfpack"], libs)
     shutil.make_archive(zip_file, "zip", "dist/wi_umfpack")
 
     # without umfpack
@@ -275,37 +281,16 @@ def dist() -> list:
         shutil.copyfile(os.path.join("bin", lib),
                         os.path.join("dist", "wo_umfpack", lib))
     shutil.copyfile("LICENSE.md", "dist/wo_umfpack/LICENSE.md")
+    write_json_index("dist/wo_umfpack", ["blas"], libs)
     shutil.make_archive(zip_file, "zip", "dist/wo_umfpack")
 
 
-def java():
-    _os = get_os()
-    if _os == OS_LINUX:
-        _os = "OS.LINUX"
-    elif _os == OS_MACOS:
-        _os = "OS.MAC"
-    elif _os == OS_WINDOWS:
-        _os = "OS.WINDOWS"
-
-    wiumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar_withumf"))
-    libs = topo_sort(get_dep_dag(wiumf))
-
-    print("if (os == %s) {" % _os)
-    print("  if (opt == LinkOption.ALL) {")
-    print("    return new String[] {")
-    for lib in libs:
-        print("      \"%s\"," % lib)
-    print("    };")
-
-    woumf = os.path.join(PROJECT_ROOT, "bin", as_lib("olcar"))
-    libs = topo_sort(get_dep_dag(woumf))
-    print("  } else {")
-    print("    return new String[] {")
-    for lib in libs:
-        print("      \"%s\"," % lib)
-    print("    };")
-    print("  }")
-    print("}")
+def write_json_index(folder: str, modules: List[str], libraries: List[str]):
+    """Writes the `olca-native.json` file into the given folder."""
+    obj = {"modules": modules, "libraries": libraries}
+    path = os.path.join(folder, 'olca-native.json')
+    with open(path, 'w', encoding='utf-8') as out:
+        json.dump(obj, out, indent='  ')
 
 
 def clean():
@@ -329,8 +314,6 @@ def main():
         sync()
     elif cmd == "dist":
         dist()
-    elif cmd == "java":
-        java()
     elif cmd == "clean":
         clean()
 
