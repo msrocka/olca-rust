@@ -260,43 +260,40 @@ def dist() -> list:
 
     dist = PROJECT_ROOT / "dist"
     shutil.rmtree(dist, ignore_errors=True)
+    dist.mkdir()
     now = datetime.datetime.now()
     suffix = "_%s_%s_%d-%02d-%02d" % (
         get_version(), get_os(), now.year, now.month, now.day)
 
-    # with umfpack
-    umf_zip = dist / f"olcar_withumf{suffix}"
-    print(f"create package {umf_zip}")
-    umf_libs = topo_sort(get_dep_dag(libof(LIB_UMFPACK)))
-    umfdir = dist / "wi_umfpack"
-    umfdir.mkdir(exist_ok=True, parents=True)
-    for lib in umf_libs:
-        shutil.copyfile(BIN_DIR / lib,
-                        umfdir / lib)
-    shutil.copyfile(PROJECT_ROOT / "LICENSE.md", umfdir / "LICENSE.md")
-    write_json_index(umfdir, ["blas", "umfpack"], umf_libs)
-    shutil.make_archive(umf_zip, "zip", umfdir)
+    def package(lib: str):
+        if lib == LIB_BLAS:
+            name = "olcar_blas"
+            mods = ["blas"]
+        else:
+            name = "olcar_umfpack"
+            mods = ["blas", "umfpack"]
 
-    # without umfpack
-    blas_zip = dist / f'olcar{suffix}'
-    print(f"create package {blas_zip}")
-    blas_libs = topo_sort(get_dep_dag(libof(LIB_BLAS)))
-    blasdir = dist / "wo_umfpack"
-    blasdir.mkdir(exist_ok=True)
-    for lib in blas_libs:
-        shutil.copyfile(BIN_DIR / lib,
-                        blasdir / lib)
-    shutil.copyfile(PROJECT_ROOT / "LICENSE.md", blasdir / "LICENSE.md")
-    write_json_index(blasdir, ["blas"], blas_libs)
-    shutil.make_archive(blas_zip, "zip", blasdir)
+        print(f"create package {name}")
 
+        # copy libraries
+        libs = topo_sort(get_dep_dag(libof(lib)))
+        dist_dir = dist / name
+        dist_dir.mkdir(exist_ok=True, parents=True)
+        for lib in libs:
+            shutil.copyfile(BIN_DIR / lib, dist_dir / lib)
+        
+        # write the index
+        obj = {"modules": mods, "libraries": libs}
+        with open(dist_dir / 'olca-native.json', 'w', encoding='utf-8') as out:
+            json.dump(obj, out, indent='  ')
+        
+        # create zip
+        shutil.copyfile(PROJECT_ROOT / "LICENSE.md", dist_dir / "LICENSE.md")
+        zip = dist / f"{name}{suffix}"
+        shutil.make_archive(zip, "zip", dist_dir)
 
-def write_json_index(folder: Path, modules: List[str], libraries: List[str]):
-    """Writes the `olca-native.json` file into the given folder."""
-    obj = {"modules": modules, "libraries": libraries}
-    path = folder / 'olca-native.json'
-    with open(path, 'w', encoding='utf-8') as out:
-        json.dump(obj, out, indent='  ')
+    package(LIB_UMFPACK)
+    package(LIB_BLAS)
 
 
 def clean():
